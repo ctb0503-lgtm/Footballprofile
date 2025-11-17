@@ -30,7 +30,7 @@ import { TabContent } from "@/components/tabs/TabContent";
 
 // Charts & analysis
 import { RenderedProfile } from "@/components/analysis/RenderedProfile";
-import { LeagueStyleQuadrantChart } from "@/components/charts";
+import { LeagueStyleQuadrantChart, GoalHeatmap } from "@/components/charts"; // <-- UPDATED
 import { VolatilityCard } from "@/components/cards/VolatilityCard";
 import { LoadingProgress } from "@/components/LoadingProgress";
 
@@ -162,34 +162,34 @@ export const FootballTrader = () => {
   // Input validation
   const validateInputs = () => {
     const errors = [];
-    
+
     if (!profile.teamA || !profile.teamB) {
       errors.push('Both team names are required');
     }
-    
+
     if (!profile.ppgBlock || !profile.indexBlock) {
       errors.push('PPG and Index blocks are required');
     }
-    
+
     if (!profile.apiKey) {
       errors.push('API key is required');
     }
-    
+
     if (errors.length > 0) {
       setGeneralError(errors.join('; '));
       return false;
     }
-    
+
     return true;
   };
 
   const handleGenerateProfile = async () => {
     setGeneralError(null);
-    
+
     if (!validateInputs()) {
       return;
     }
-    
+
     profile.resetProfile();
 
     try {
@@ -197,7 +197,7 @@ export const FootballTrader = () => {
 
       const userQuery = `
       Analyze the upcoming match: **${profile.teamA || "Home Team"} vs ${profile.teamB || "Away Team"}**.
-      
+
       PPG Block: ${profile.ppgBlock || "N/A"}
       Index Block: ${profile.indexBlock || "N/A"}
       Home 5-Min: ${profile.homeFiveMinSegmentBlock || "N/A"}
@@ -511,6 +511,14 @@ export const FootballTrader = () => {
                       profile.keyVisualisations || !api.visualisationsLoading
                     }
                   >
+                    {/* --- ADDED HEATMAP --- */}
+                    <GoalHeatmap
+                      data={profile.fiveMinSegmentChartData}
+                      teamA={profile.teamA}
+                      teamB={profile.teamB}
+                    />
+                    {/* --------------------- */}
+
                     <LeagueStyleQuadrantChart
                       leagueTableData={profile.leagueTable}
                       homeTeamName={profile.teamA}

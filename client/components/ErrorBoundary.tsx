@@ -6,7 +6,8 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-export class ErrorBoundary extends React.Component
+// FIX: Correctly define the class component extending React.Component<Props, State>
+export class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
   ErrorBoundaryState
 > {

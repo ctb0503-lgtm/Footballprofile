@@ -14,6 +14,7 @@ import {
   Label,
 } from "recharts";
 import { PPGChartData, SegmentChartData } from "@/types";
+import { GoalHeatmap } from './GoalHeatmap'; // <-- ADDED
 
 interface PpgChartProps {
   data: PPGChartData[];
@@ -297,6 +298,7 @@ export const LeagueStyleQuadrantChart = ({
             />
           </ReferenceLine>
 
+
           <Scatter
             name="League Teams"
             data={leagueTeams}
@@ -342,4 +344,11 @@ export const LeagueStyleQuadrantChart = ({
       </p>
     </div>
   );
+};
+
+export {
+  PpgChart,
+  FiveMinSegmentChart,
+  LeagueStyleQuadrantChart,
+  GoalHeatmap // <-- ADDED
 };
