@@ -61,15 +61,17 @@ export const useFirebase = (appId: string): UseFirebaseReturn => {
             signInUser()
               .catch((error) => {
                 console.error("Anonymous sign-in failed:", error);
-                setAuthError("Could not sign in. Persistence may be limited.");
+                setAuthError("Firebase not fully configured");
                 setIsAuthLoading(false);
               });
           }
         });
 
-        return () => unsubscribe();
+        return () => {
+          if (unsubscribe) unsubscribe();
+        };
       } else {
-        setAuthError("Firebase auth not initialized");
+        setAuthError("Firebase not available");
         setIsAuthLoading(false);
       }
     } catch (error) {
