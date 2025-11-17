@@ -12,7 +12,7 @@ import {
 } from '@/types';
 import { FIVE_MIN_SEGMENTS, LATE_SEGMENTS } from '@/utils/constants';
 
-export const parsePpgBlock = (data: string, teamA?: string, teamB?: string): PPPParseResult => {
+export const parsePpgBlock = (data: string, teamA?: string, teamB?: string): PPGParseResult => {
   if (!data) return { chartData: [], fullBlock: '', home: '', away: '' };
   const lines = data.split('\n');
   let homeStats = { name: teamA || 'Home', PPG: 0, 'PPG L8': 0, 'Opp PPG L8': 0, 'PPG Bias': 0 };
