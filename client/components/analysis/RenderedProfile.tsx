@@ -1,4 +1,3 @@
-import { marked } from 'marked';
 import { PPGChartData, SegmentChartData } from '@/types';
 import { PpgChart, FiveMinSegmentChart } from '@/components/charts';
 
@@ -10,13 +9,11 @@ interface RenderedProfileProps {
 
 const RenderedProfileContent = ({ markdown }: { markdown: string }) => {
   if (!markdown) return null;
-  try {
-    const html = marked.parse(markdown);
-    return <div className="prose prose-invert prose-sm max-w-none text-gray-300" dangerouslySetInnerHTML={{ __html: html }} />;
-  } catch (e) {
-    console.error("Error parsing markdown:", e, markdown);
-    return <pre>Error rendering content.</pre>;
-  }
+  return (
+    <div className="prose prose-invert prose-sm max-w-none text-gray-300 whitespace-pre-wrap break-words">
+      {markdown}
+    </div>
+  );
 };
 
 export const RenderedProfile = ({
