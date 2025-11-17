@@ -1,34 +1,58 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState } from "react";
 import {
   generateAnalysisProfile,
   askAnalystFollowUp,
-  generateKeyContent
-} from '@/services/apiService';
-import { Profile } from '@/types';
+  generateKeyContent,
+} from "@/services/apiService";
+import { Profile } from "@/types";
 
 interface UseAnalysisAPIReturn {
   // Main profile generation
-  generateProfile: (userQuery: string, systemPrompt: string, apiKey: string) => Promise<void>;
+  generateProfile: (
+    userQuery: string,
+    systemPrompt: string,
+    apiKey: string,
+  ) => Promise<void>;
   profileLoading: boolean;
   profileError: string | null;
-  
+
   // Follow-up question
-  askFollowUp: (question: string, context: string, systemPrompt: string, apiKey: string) => Promise<void>;
+  askFollowUp: (
+    question: string,
+    context: string,
+    systemPrompt: string,
+    apiKey: string,
+  ) => Promise<void>;
   followUpLoading: boolean;
   followUpError: string | null;
-  
+
   // Key learnings
-  generateLearnings: (analysisText: string, rawData: string, systemPrompt: string, apiKey: string) => Promise<void>;
+  generateLearnings: (
+    analysisText: string,
+    rawData: string,
+    systemPrompt: string,
+    apiKey: string,
+  ) => Promise<void>;
   learningsLoading: boolean;
   learningsError: string | null;
-  
+
   // Key charts
-  generateCharts: (analysisText: string, rawData: string, systemPrompt: string, apiKey: string) => Promise<void>;
+  generateCharts: (
+    analysisText: string,
+    rawData: string,
+    systemPrompt: string,
+    apiKey: string,
+  ) => Promise<void>;
   chartsLoading: boolean;
   chartsError: string | null;
-  
+
   // Key visualisations
-  generateVisualisations: (analysisText: string, rawData: string, systemPrompt: string, apiKey: string) => Promise<void>;
+  generateVisualisations: (
+    analysisText: string,
+    rawData: string,
+    systemPrompt: string,
+    apiKey: string,
+  ) => Promise<void>;
   visualisationsLoading: boolean;
   visualisationsError: string | null;
 }
@@ -38,7 +62,7 @@ export const useAnalysisAPI = (
   onFollowUpAnswered: (answer: Profile) => void,
   onLearningsGenerated: (learnings: Profile) => void,
   onChartsGenerated: (charts: Profile) => void,
-  onVisualisationsGenerated: (visualisations: Profile) => void
+  onVisualisationsGenerated: (visualisations: Profile) => void,
 ): UseAnalysisAPIReturn => {
   // Main profile
   const [profileLoading, setProfileLoading] = useState(false);
@@ -58,7 +82,9 @@ export const useAnalysisAPI = (
 
   // Visualisations
   const [visualisationsLoading, setVisualisationsLoading] = useState(false);
-  const [visualisationsError, setVisualisationsError] = useState<string | null>(null);
+  const [visualisationsError, setVisualisationsError] = useState<string | null>(
+    null,
+  );
 
   // Generate profile
   const generateProfile = useCallback(
@@ -67,92 +93,141 @@ export const useAnalysisAPI = (
       setProfileError(null);
 
       try {
-        const profile = await generateAnalysisProfile(userQuery, systemPrompt, apiKey);
+        const profile = await generateAnalysisProfile(
+          userQuery,
+          systemPrompt,
+          apiKey,
+        );
         onProfileGenerated(profile);
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         setProfileError(errorMessage);
       } finally {
         setProfileLoading(false);
       }
     },
-    [onProfileGenerated]
+    [onProfileGenerated],
   );
 
   // Ask follow-up
   const askFollowUp = useCallback(
-    async (question: string, context: string, systemPrompt: string, apiKey: string) => {
+    async (
+      question: string,
+      context: string,
+      systemPrompt: string,
+      apiKey: string,
+    ) => {
       setFollowUpLoading(true);
       setFollowUpError(null);
 
       try {
-        const answer = await askAnalystFollowUp(question, context, systemPrompt, apiKey);
+        const answer = await askAnalystFollowUp(
+          question,
+          context,
+          systemPrompt,
+          apiKey,
+        );
         onFollowUpAnswered(answer);
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         setFollowUpError(errorMessage);
       } finally {
         setFollowUpLoading(false);
       }
     },
-    [onFollowUpAnswered]
+    [onFollowUpAnswered],
   );
 
   // Generate learnings
   const generateLearnings = useCallback(
-    async (analysisText: string, rawData: string, systemPrompt: string, apiKey: string) => {
+    async (
+      analysisText: string,
+      rawData: string,
+      systemPrompt: string,
+      apiKey: string,
+    ) => {
       setLearningsLoading(true);
       setLearningsError(null);
 
       try {
-        const learnings = await generateKeyContent(analysisText, rawData, systemPrompt, apiKey);
+        const learnings = await generateKeyContent(
+          analysisText,
+          rawData,
+          systemPrompt,
+          apiKey,
+        );
         onLearningsGenerated(learnings);
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         setLearningsError(errorMessage);
       } finally {
         setLearningsLoading(false);
       }
     },
-    [onLearningsGenerated]
+    [onLearningsGenerated],
   );
 
   // Generate charts
   const generateCharts = useCallback(
-    async (analysisText: string, rawData: string, systemPrompt: string, apiKey: string) => {
+    async (
+      analysisText: string,
+      rawData: string,
+      systemPrompt: string,
+      apiKey: string,
+    ) => {
       setChartsLoading(true);
       setChartsError(null);
 
       try {
-        const charts = await generateKeyContent(analysisText, rawData, systemPrompt, apiKey);
+        const charts = await generateKeyContent(
+          analysisText,
+          rawData,
+          systemPrompt,
+          apiKey,
+        );
         onChartsGenerated(charts);
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         setChartsError(errorMessage);
       } finally {
         setChartsLoading(false);
       }
     },
-    [onChartsGenerated]
+    [onChartsGenerated],
   );
 
   // Generate visualisations
   const generateVisualisations = useCallback(
-    async (analysisText: string, rawData: string, systemPrompt: string, apiKey: string) => {
+    async (
+      analysisText: string,
+      rawData: string,
+      systemPrompt: string,
+      apiKey: string,
+    ) => {
       setVisualisationsLoading(true);
       setVisualisationsError(null);
 
       try {
-        const visualisations = await generateKeyContent(analysisText, rawData, systemPrompt, apiKey);
+        const visualisations = await generateKeyContent(
+          analysisText,
+          rawData,
+          systemPrompt,
+          apiKey,
+        );
         onVisualisationsGenerated(visualisations);
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         setVisualisationsError(errorMessage);
       } finally {
         setVisualisationsLoading(false);
       }
     },
-    [onVisualisationsGenerated]
+    [onVisualisationsGenerated],
   );
 
   return {
@@ -170,6 +245,6 @@ export const useAnalysisAPI = (
     chartsError,
     generateVisualisations,
     visualisationsLoading,
-    visualisationsError
+    visualisationsError,
   };
 };

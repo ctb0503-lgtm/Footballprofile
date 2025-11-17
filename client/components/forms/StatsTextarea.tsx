@@ -11,10 +11,12 @@ export const StatsTextarea = ({
   value,
   onChange,
   placeholder,
-  rows = 6
+  rows = 6,
 }: StatsTextareaProps) => (
   <div className="mb-4">
-    <label className="block text-sm font-medium text-gray-300 mb-1">{label}</label>
+    <label className="block text-sm font-medium text-gray-300 mb-1">
+      {label}
+    </label>
     <textarea
       value={value}
       onChange={(e) => onChange(e.target.value)}

@@ -1,25 +1,38 @@
-import { useEffect, useCallback, useState } from 'react';
-import { useProfile } from '@/hooks/useProfile';
-import { useFirebase } from '@/hooks/useFirebase';
-import { useAnalysisAPI } from '@/hooks/useAnalysisAPI';
-import { SYSTEM_PROMPT, FOLLOW_UP_SYSTEM_PROMPT, KEY_LEARNINGS_SYSTEM_PROMPT, KEY_CHARTS_SYSTEM_PROMPT, KEY_VISUALISATIONS_SYSTEM_PROMPT } from '@/utils/constants';
+import { useEffect, useCallback, useState } from "react";
+import { useProfile } from "@/hooks/useProfile";
+import { useFirebase } from "@/hooks/useFirebase";
+import { useAnalysisAPI } from "@/hooks/useAnalysisAPI";
+import {
+  SYSTEM_PROMPT,
+  FOLLOW_UP_SYSTEM_PROMPT,
+  KEY_LEARNINGS_SYSTEM_PROMPT,
+  KEY_CHARTS_SYSTEM_PROMPT,
+  KEY_VISUALISATIONS_SYSTEM_PROMPT,
+} from "@/utils/constants";
 
 // Icons
-import { FootballIcon, LoadingIcon, ErrorIcon, SaveIcon, LoadIcon, DeleteIcon } from '@/components/icons';
+import {
+  FootballIcon,
+  LoadingIcon,
+  ErrorIcon,
+  SaveIcon,
+  LoadIcon,
+  DeleteIcon,
+} from "@/components/icons";
 
 // Form components
-import { StatsTextarea } from '@/components/forms/StatsTextarea';
+import { StatsTextarea } from "@/components/forms/StatsTextarea";
 
 // Tab components
-import { TabButton } from '@/components/tabs/TabButton';
-import { TabContent } from '@/components/tabs/TabContent';
+import { TabButton } from "@/components/tabs/TabButton";
+import { TabContent } from "@/components/tabs/TabContent";
 
 // Charts & analysis
-import { RenderedProfile } from '@/components/analysis/RenderedProfile';
-import { LeagueStyleQuadrantChart } from '@/components/charts';
-import { VolatilityCard } from '@/components/cards/VolatilityCard';
+import { RenderedProfile } from "@/components/analysis/RenderedProfile";
+import { LeagueStyleQuadrantChart } from "@/components/charts";
+import { VolatilityCard } from "@/components/cards/VolatilityCard";
 
-const APP_ID = 'default-app-id'; // Should be from env
+const APP_ID = "default-app-id"; // Should be from env
 
 export const FootballTrader = () => {
   // Profile management
@@ -34,7 +47,7 @@ export const FootballTrader = () => {
     (answer) => profile.setFollowUpAnswer(answer.text),
     (learnings) => profile.setKeyLearnings(learnings.text),
     (charts) => profile.setKeyCharts(charts.text),
-    (visualisations) => profile.setKeyVisualisations(visualisations.text)
+    (visualisations) => profile.setKeyVisualisations(visualisations.text),
   );
 
   // Loading states
@@ -43,43 +56,73 @@ export const FootballTrader = () => {
 
   // Lazy-load tabs
   useEffect(() => {
-    if (profile.activeTab === 'charts' && !profile.keyCharts && profile.profile.text && !api.chartsLoading) {
+    if (
+      profile.activeTab === "charts" &&
+      !profile.keyCharts &&
+      profile.profile.text &&
+      !api.chartsLoading
+    ) {
       const rawData = constructRawData();
-      api.generateCharts(profile.profile.text, rawData, KEY_CHARTS_SYSTEM_PROMPT, getApiKey());
+      api.generateCharts(
+        profile.profile.text,
+        rawData,
+        KEY_CHARTS_SYSTEM_PROMPT,
+        getApiKey(),
+      );
     }
   }, [profile.activeTab, profile.profile.text]);
 
   useEffect(() => {
-    if (profile.activeTab === 'learnings' && !profile.keyLearnings && profile.profile.text && !api.learningsLoading) {
-      api.generateLearnings(profile.profile.text, constructRawData(), KEY_LEARNINGS_SYSTEM_PROMPT, getApiKey());
+    if (
+      profile.activeTab === "learnings" &&
+      !profile.keyLearnings &&
+      profile.profile.text &&
+      !api.learningsLoading
+    ) {
+      api.generateLearnings(
+        profile.profile.text,
+        constructRawData(),
+        KEY_LEARNINGS_SYSTEM_PROMPT,
+        getApiKey(),
+      );
     }
   }, [profile.activeTab, profile.profile.text]);
 
   useEffect(() => {
-    if (profile.activeTab === 'visualisations' && !profile.keyVisualisations && profile.profile.text && !api.visualisationsLoading) {
-      api.generateVisualisations(profile.profile.text, constructRawData(), KEY_VISUALISATIONS_SYSTEM_PROMPT, getApiKey());
+    if (
+      profile.activeTab === "visualisations" &&
+      !profile.keyVisualisations &&
+      profile.profile.text &&
+      !api.visualisationsLoading
+    ) {
+      api.generateVisualisations(
+        profile.profile.text,
+        constructRawData(),
+        KEY_VISUALISATIONS_SYSTEM_PROMPT,
+        getApiKey(),
+      );
     }
   }, [profile.activeTab, profile.profile.text]);
 
   // Load profiles when authenticated
   useEffect(() => {
-    if (profile.activeTab === 'myProfiles' && firebase.isAuthenticated) {
+    if (profile.activeTab === "myProfiles" && firebase.isAuthenticated) {
       // Profiles are loaded automatically by useFirebase hook
     }
   }, [profile.activeTab, firebase.isAuthenticated]);
 
   const getApiKey = () => {
-    return (window as any).__gemini_api_key || '';
+    return (window as any).__gemini_api_key || "";
   };
 
   const constructRawData = () => {
     return `
-    PPG Block: ${profile.ppgBlock || 'N/A'}
-    Index Block: ${profile.indexBlock || 'N/A'}
-    Home 5-Min: ${profile.homeFiveMinSegmentBlock || 'N/A'}
-    Away 5-Min: ${profile.awayFiveMinSegmentBlock || 'N/A'}
-    Overall Stats: ${profile.overallStats || 'N/A'}
-    At Venue Stats: ${profile.atVenueStats || 'N/A'}
+    PPG Block: ${profile.ppgBlock || "N/A"}
+    Index Block: ${profile.indexBlock || "N/A"}
+    Home 5-Min: ${profile.homeFiveMinSegmentBlock || "N/A"}
+    Away 5-Min: ${profile.awayFiveMinSegmentBlock || "N/A"}
+    Overall Stats: ${profile.overallStats || "N/A"}
+    At Venue Stats: ${profile.atVenueStats || "N/A"}
     `;
   };
 
@@ -91,17 +134,17 @@ export const FootballTrader = () => {
       const parsedData = profile.getParsedData();
 
       const userQuery = `
-      Analyze the upcoming match: **${profile.teamA || 'Home Team'} vs ${profile.teamB || 'Away Team'}**.
+      Analyze the upcoming match: **${profile.teamA || "Home Team"} vs ${profile.teamB || "Away Team"}**.
       
-      PPG Block: ${profile.ppgBlock || 'N/A'}
-      Index Block: ${profile.indexBlock || 'N/A'}
-      Home 5-Min: ${profile.homeFiveMinSegmentBlock || 'N/A'}
-      Away 5-Min: ${profile.awayFiveMinSegmentBlock || 'N/A'}
-      Overall Stats: ${profile.overallStats || 'N/A'}
-      At Venue Stats: ${profile.atVenueStats || 'N/A'}
-      League Table: ${profile.leagueTable || 'N/A'}
-      Home Raw Results: ${profile.homeRawResults || 'N/A'}
-      Away Raw Results: ${profile.awayRawResults || 'N/A'}
+      PPG Block: ${profile.ppgBlock || "N/A"}
+      Index Block: ${profile.indexBlock || "N/A"}
+      Home 5-Min: ${profile.homeFiveMinSegmentBlock || "N/A"}
+      Away 5-Min: ${profile.awayFiveMinSegmentBlock || "N/A"}
+      Overall Stats: ${profile.overallStats || "N/A"}
+      At Venue Stats: ${profile.atVenueStats || "N/A"}
+      League Table: ${profile.leagueTable || "N/A"}
+      Home Raw Results: ${profile.homeRawResults || "N/A"}
+      Away Raw Results: ${profile.awayRawResults || "N/A"}
       `;
 
       await api.generateProfile(userQuery, SYSTEM_PROMPT, getApiKey());
@@ -122,11 +165,11 @@ export const FootballTrader = () => {
         profile.teamB,
         profile.profile.text,
         profile.profile.sources,
-        profile.getInputs()
+        profile.getInputs(),
       );
       // Success feedback could go here
     } catch (error) {
-      setGeneralError('Failed to save profile');
+      setGeneralError("Failed to save profile");
     } finally {
       setIsSaving(false);
     }
@@ -138,27 +181,32 @@ export const FootballTrader = () => {
       savedProfile.teamB,
       savedProfile.profileText,
       savedProfile.sources,
-      savedProfile.inputs
+      savedProfile.inputs,
     );
   };
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-200 font-sans p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-
         {/* Header */}
         <header className="mb-6 flex items-center">
           <FootballIcon />
-          <h1 className="text-3xl font-bold text-white">Football Trader Profile Tool</h1>
+          <h1 className="text-3xl font-bold text-white">
+            Football Trader Profile Tool
+          </h1>
         </header>
 
         {/* Inputs Section */}
         <div className="bg-gray-900 p-5 rounded-lg shadow-lg border border-gray-800">
-          <h2 className="text-xl font-semibold mb-4 text-white border-b border-gray-700 pb-2">Data Inputs</h2>
+          <h2 className="text-xl font-semibold mb-4 text-white border-b border-gray-700 pb-2">
+            Data Inputs
+          </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Home Team</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Home Team
+              </label>
               <input
                 type="text"
                 value={profile.teamA}
@@ -168,7 +216,9 @@ export const FootballTrader = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Away Team</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Away Team
+              </label>
               <input
                 type="text"
                 value={profile.teamB}
@@ -280,14 +330,16 @@ export const FootballTrader = () => {
                 Generating...
               </>
             ) : (
-              'Generate Profile'
+              "Generate Profile"
             )}
           </button>
         </div>
 
         {/* Output Section */}
         <div className="bg-gray-900 p-5 rounded-lg shadow-lg border border-gray-800 space-y-6">
-          <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">Analytical Profile</h2>
+          <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">
+            Analytical Profile
+          </h2>
 
           {/* Loading state */}
           {api.profileLoading && (
@@ -302,9 +354,13 @@ export const FootballTrader = () => {
             <div className="p-4 bg-red-900 border border-red-700 rounded-md">
               <div className="flex items-center mb-2">
                 <ErrorIcon />
-                <h3 className="text-lg font-bold text-red-200">Analysis Failed</h3>
+                <h3 className="text-lg font-bold text-red-200">
+                  Analysis Failed
+                </h3>
               </div>
-              <pre className="text-sm text-red-100 whitespace-pre-wrap font-mono">{api.profileError || generalError}</pre>
+              <pre className="text-sm text-red-100 whitespace-pre-wrap font-mono">
+                {api.profileError || generalError}
+              </pre>
             </div>
           )}
 
@@ -334,41 +390,41 @@ export const FootballTrader = () => {
               <div className="flex border-b border-gray-700 mb-4 flex-wrap">
                 <TabButton
                   label="Full Report"
-                  isActive={profile.activeTab === 'report'}
-                  onClick={() => profile.setActiveTab('report')}
+                  isActive={profile.activeTab === "report"}
+                  onClick={() => profile.setActiveTab("report")}
                 />
                 <TabButton
                   label="Key Charts & Stats"
-                  isActive={profile.activeTab === 'charts'}
-                  onClick={() => profile.setActiveTab('charts')}
+                  isActive={profile.activeTab === "charts"}
+                  onClick={() => profile.setActiveTab("charts")}
                 />
                 <TabButton
                   label="Key Visualisations"
-                  isActive={profile.activeTab === 'visualisations'}
-                  onClick={() => profile.setActiveTab('visualisations')}
+                  isActive={profile.activeTab === "visualisations"}
+                  onClick={() => profile.setActiveTab("visualisations")}
                 />
                 <TabButton
                   label="Analyst Q&A"
-                  isActive={profile.activeTab === 'analyst'}
-                  onClick={() => profile.setActiveTab('analyst')}
+                  isActive={profile.activeTab === "analyst"}
+                  onClick={() => profile.setActiveTab("analyst")}
                 />
                 <TabButton
                   label="Key Learnings"
-                  isActive={profile.activeTab === 'learnings'}
-                  onClick={() => profile.setActiveTab('learnings')}
+                  isActive={profile.activeTab === "learnings"}
+                  onClick={() => profile.setActiveTab("learnings")}
                 />
                 {firebase.isAuthenticated && (
                   <TabButton
                     label="My Profiles"
-                    isActive={profile.activeTab === 'myProfiles'}
-                    onClick={() => profile.setActiveTab('myProfiles')}
+                    isActive={profile.activeTab === "myProfiles"}
+                    onClick={() => profile.setActiveTab("myProfiles")}
                   />
                 )}
               </div>
 
               {/* Tab content */}
               <div className="p-4 bg-gray-800 rounded-md border border-gray-700 min-h-[400px]">
-                {profile.activeTab === 'report' && (
+                {profile.activeTab === "report" && (
                   <RenderedProfile
                     markdownText={profile.profile.text}
                     ppgData={profile.ppgChartData}
@@ -376,28 +432,64 @@ export const FootballTrader = () => {
                   />
                 )}
 
-                {profile.activeTab === 'charts' && (
-                  <TabContent isLoading={api.chartsLoading} error={api.chartsError} data={profile.keyCharts || !api.chartsLoading}>
-                    <div className="prose prose-invert prose-sm max-w-none text-gray-300">{profile.keyCharts}</div>
+                {profile.activeTab === "charts" && (
+                  <TabContent
+                    isLoading={api.chartsLoading}
+                    error={api.chartsError}
+                    data={profile.keyCharts || !api.chartsLoading}
+                  >
+                    <div className="prose prose-invert prose-sm max-w-none text-gray-300">
+                      {profile.keyCharts}
+                    </div>
                   </TabContent>
                 )}
 
-                {profile.activeTab === 'visualisations' && (
-                  <TabContent isLoading={api.visualisationsLoading} error={api.visualisationsError} data={profile.keyVisualisations || !api.visualisationsLoading}>
+                {profile.activeTab === "visualisations" && (
+                  <TabContent
+                    isLoading={api.visualisationsLoading}
+                    error={api.visualisationsError}
+                    data={
+                      profile.keyVisualisations || !api.visualisationsLoading
+                    }
+                  >
                     <LeagueStyleQuadrantChart
                       leagueTableData={profile.leagueTable}
                       homeTeamName={profile.teamA}
                       awayTeamName={profile.teamB}
                     />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <VolatilityCard teamName={profile.teamA || 'Home'} volatilityData={{ volatilityPercent: 0, meanScored: 0, stdDevScored: 0, scoredCV: 0, meanConceded: 0, stdDevConceded: 0, concededCV: 0 }} />
-                      <VolatilityCard teamName={profile.teamB || 'Away'} volatilityData={{ volatilityPercent: 0, meanScored: 0, stdDevScored: 0, scoredCV: 0, meanConceded: 0, stdDevConceded: 0, concededCV: 0 }} />
+                      <VolatilityCard
+                        teamName={profile.teamA || "Home"}
+                        volatilityData={{
+                          volatilityPercent: 0,
+                          meanScored: 0,
+                          stdDevScored: 0,
+                          scoredCV: 0,
+                          meanConceded: 0,
+                          stdDevConceded: 0,
+                          concededCV: 0,
+                        }}
+                      />
+                      <VolatilityCard
+                        teamName={profile.teamB || "Away"}
+                        volatilityData={{
+                          volatilityPercent: 0,
+                          meanScored: 0,
+                          stdDevScored: 0,
+                          scoredCV: 0,
+                          meanConceded: 0,
+                          stdDevConceded: 0,
+                          concededCV: 0,
+                        }}
+                      />
                     </div>
-                    <div className="prose prose-invert prose-sm max-w-none text-gray-300">{profile.keyVisualisations}</div>
+                    <div className="prose prose-invert prose-sm max-w-none text-gray-300">
+                      {profile.keyVisualisations}
+                    </div>
                   </TabContent>
                 )}
 
-                {profile.activeTab === 'analyst' && (
+                {profile.activeTab === "analyst" && (
                   <div className="space-y-4">
                     <StatsTextarea
                       label="Ask a follow-up question"
@@ -409,71 +501,110 @@ export const FootballTrader = () => {
                     <button
                       onClick={() => {
                         const rawData = constructRawData();
-                        api.askFollowUp(profile.followUpQuestion, profile.profile.text + '\n\n' + rawData, FOLLOW_UP_SYSTEM_PROMPT, getApiKey());
+                        api.askFollowUp(
+                          profile.followUpQuestion,
+                          profile.profile.text + "\n\n" + rawData,
+                          FOLLOW_UP_SYSTEM_PROMPT,
+                          getApiKey(),
+                        );
                       }}
                       disabled={api.followUpLoading}
                       className="w-full flex items-center justify-center p-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 disabled:bg-gray-500"
                     >
-                      {api.followUpLoading ? <LoadingIcon /> : '💬'}
-                      {api.followUpLoading ? 'Thinking...' : 'Ask Analyst'}
+                      {api.followUpLoading ? <LoadingIcon /> : "💬"}
+                      {api.followUpLoading ? "Thinking..." : "Ask Analyst"}
                     </button>
-                    <TabContent isLoading={api.followUpLoading} error={api.followUpError} data={profile.followUpAnswer}>
-                      <div className="prose prose-invert prose-sm max-w-none text-gray-300">{profile.followUpAnswer}</div>
+                    <TabContent
+                      isLoading={api.followUpLoading}
+                      error={api.followUpError}
+                      data={profile.followUpAnswer}
+                    >
+                      <div className="prose prose-invert prose-sm max-w-none text-gray-300">
+                        {profile.followUpAnswer}
+                      </div>
                     </TabContent>
                   </div>
                 )}
 
-                {profile.activeTab === 'learnings' && (
-                  <TabContent isLoading={api.learningsLoading} error={api.learningsError} data={profile.keyLearnings || !api.learningsLoading}>
-                    <div className="prose prose-invert prose-sm max-w-none text-gray-300">{profile.keyLearnings}</div>
-                  </TabContent>
-                )}
-
-                {firebase.isAuthenticated && profile.activeTab === 'myProfiles' && (
-                  <TabContent isLoading={firebase.isLoadingProfiles} error={firebase.profilesError} data={true}>
-                    <h3 className="text-lg font-semibold mb-4 text-white">My Saved Profiles</h3>
-                    {firebase.myProfiles.length === 0 && !firebase.isLoadingProfiles && (
-                      <p className="text-gray-400">You have no saved profiles yet.</p>
-                    )}
-                    <div className="space-y-3">
-                      {firebase.myProfiles.map((prof) => (
-                        <div key={prof.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-3 bg-gray-900 rounded-md border border-gray-700">
-                          <div className="mb-2 md:mb-0">
-                            <p className="font-semibold text-white">{prof.teamA} vs {prof.teamB}</p>
-                            <p className="text-xs text-gray-400">
-                              Saved: {prof.createdAt ? new Date(prof.createdAt.seconds * 1000).toLocaleString() : 'Unknown'}
-                            </p>
-                          </div>
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleLoadProfile(prof)}
-                              className="flex items-center p-2 bg-blue-600 text-white text-xs font-bold rounded-md hover:bg-blue-700"
-                            >
-                              <LoadIcon />
-                              Load
-                            </button>
-                            <button
-                              onClick={() => firebase.deleteProfile(prof.id)}
-                              className="flex items-center p-2 bg-red-600 text-white text-xs font-bold rounded-md hover:bg-red-700"
-                            >
-                              <DeleteIcon />
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                {profile.activeTab === "learnings" && (
+                  <TabContent
+                    isLoading={api.learningsLoading}
+                    error={api.learningsError}
+                    data={profile.keyLearnings || !api.learningsLoading}
+                  >
+                    <div className="prose prose-invert prose-sm max-w-none text-gray-300">
+                      {profile.keyLearnings}
                     </div>
                   </TabContent>
                 )}
+
+                {firebase.isAuthenticated &&
+                  profile.activeTab === "myProfiles" && (
+                    <TabContent
+                      isLoading={firebase.isLoadingProfiles}
+                      error={firebase.profilesError}
+                      data={true}
+                    >
+                      <h3 className="text-lg font-semibold mb-4 text-white">
+                        My Saved Profiles
+                      </h3>
+                      {firebase.myProfiles.length === 0 &&
+                        !firebase.isLoadingProfiles && (
+                          <p className="text-gray-400">
+                            You have no saved profiles yet.
+                          </p>
+                        )}
+                      <div className="space-y-3">
+                        {firebase.myProfiles.map((prof) => (
+                          <div
+                            key={prof.id}
+                            className="flex flex-col md:flex-row justify-between items-start md:items-center p-3 bg-gray-900 rounded-md border border-gray-700"
+                          >
+                            <div className="mb-2 md:mb-0">
+                              <p className="font-semibold text-white">
+                                {prof.teamA} vs {prof.teamB}
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                Saved:{" "}
+                                {prof.createdAt
+                                  ? new Date(
+                                      prof.createdAt.seconds * 1000,
+                                    ).toLocaleString()
+                                  : "Unknown"}
+                              </p>
+                            </div>
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleLoadProfile(prof)}
+                                className="flex items-center p-2 bg-blue-600 text-white text-xs font-bold rounded-md hover:bg-blue-700"
+                              >
+                                <LoadIcon />
+                                Load
+                              </button>
+                              <button
+                                onClick={() => firebase.deleteProfile(prof.id)}
+                                className="flex items-center p-2 bg-red-600 text-white text-xs font-bold rounded-md hover:bg-red-700"
+                              >
+                                <DeleteIcon />
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </TabContent>
+                  )}
               </div>
             </div>
           )}
 
-          {!profile.profile.text && !api.profileLoading && !api.profileError && (
-            <div className="text-center text-gray-500 p-6">
-              Enter team names and paste data to generate a profile.
-            </div>
-          )}
+          {!profile.profile.text &&
+            !api.profileLoading &&
+            !api.profileError && (
+              <div className="text-center text-gray-500 p-6">
+                Enter team names and paste data to generate a profile.
+              </div>
+            )}
         </div>
       </div>
     </div>

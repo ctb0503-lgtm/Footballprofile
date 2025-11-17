@@ -1,15 +1,12 @@
-import {
-  initializeApp,
-  FirebaseApp
-} from 'firebase/app';
+import { initializeApp, FirebaseApp } from "firebase/app";
 import {
   getAuth,
   signInWithCustomToken,
   signInAnonymously,
   onAuthStateChanged,
   Auth,
-  User
-} from 'firebase/auth';
+  User,
+} from "firebase/auth";
 import {
   getFirestore,
   collection,
@@ -20,9 +17,9 @@ import {
   serverTimestamp,
   setLogLevel,
   Firestore,
-  Unsubscribe
-} from 'firebase/firestore';
-import { SavedProfile, ProfileInputs } from '@/types';
+  Unsubscribe,
+} from "firebase/firestore";
+import { SavedProfile, ProfileInputs } from "@/types";
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
@@ -35,7 +32,7 @@ const FIREBASE_CONFIG_PLACEHOLDER = {
   projectId: "demo-project",
   storageBucket: "demo-project.appspot.com",
   messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef"
+  appId: "1:123456789:web:abcdef",
 };
 
 export const initializeFirebase = () => {
@@ -44,14 +41,15 @@ export const initializeFirebase = () => {
   }
 
   try {
-    const firebaseConfig = typeof (window as any).__firebase_config !== 'undefined'
-      ? JSON.parse((window as any).__firebase_config)
-      : FIREBASE_CONFIG_PLACEHOLDER;
+    const firebaseConfig =
+      typeof (window as any).__firebase_config !== "undefined"
+        ? JSON.parse((window as any).__firebase_config)
+        : FIREBASE_CONFIG_PLACEHOLDER;
 
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
-    setLogLevel('debug');
+    setLogLevel("debug");
     isInitialized = true;
 
     return { auth, db };
@@ -64,13 +62,13 @@ export const initializeFirebase = () => {
 
 export const getFirebaseInstances = () => {
   if (!auth || !db) {
-    throw new Error('Firebase not initialized');
+    throw new Error("Firebase not initialized");
   }
   return { auth, db };
 };
 
 export const setupAuthStateListener = (
-  callback: (user: User | null) => void
+  callback: (user: User | null) => void,
 ): Unsubscribe | null => {
   if (!auth) return null;
 
@@ -85,7 +83,7 @@ export const setupAuthStateListener = (
 };
 
 export const signInUser = async (token?: string) => {
-  if (!auth) throw new Error('Firebase auth not initialized');
+  if (!auth) throw new Error("Firebase auth not initialized");
 
   try {
     if (token) {
@@ -106,14 +104,14 @@ export const saveProfileToFirestore = async (
   teamB: string,
   profileText: string,
   sources: any[],
-  inputs: ProfileInputs
+  inputs: ProfileInputs,
 ) => {
-  if (!db) throw new Error('Firestore not initialized');
+  if (!db) throw new Error("Firestore not initialized");
 
   try {
     const profilesCollection = collection(
       db,
-      `artifacts/${appId}/users/${userId}/profiles`
+      `artifacts/${appId}/users/${userId}/profiles`,
     );
 
     const profileToSave = {
@@ -122,7 +120,7 @@ export const saveProfileToFirestore = async (
       profileText,
       sources,
       createdAt: serverTimestamp(),
-      inputs
+      inputs,
     };
 
     const docRef = await addDoc(profilesCollection, profileToSave);
@@ -137,29 +135,32 @@ export const loadProfilesFromFirestore = (
   userId: string,
   appId: string,
   onUpdate: (profiles: SavedProfile[]) => void,
-  onError: (error: Error) => void
+  onError: (error: Error) => void,
 ): Unsubscribe | null => {
   if (!db) {
-    onError(new Error('Firestore not initialized'));
+    onError(new Error("Firestore not initialized"));
     return null;
   }
 
   try {
     const profilesCollection = collection(
       db,
-      `artifacts/${appId}/users/${userId}/profiles`
+      `artifacts/${appId}/users/${userId}/profiles`,
     );
 
     return onSnapshot(
       profilesCollection,
       (snapshot) => {
-        const profilesData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as SavedProfile));
+        const profilesData = snapshot.docs.map(
+          (doc) =>
+            ({
+              id: doc.id,
+              ...doc.data(),
+            }) as SavedProfile,
+        );
 
-        profilesData.sort((a, b) =>
-          (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
+        profilesData.sort(
+          (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0),
         );
 
         onUpdate(profilesData);
@@ -167,7 +168,7 @@ export const loadProfilesFromFirestore = (
       (error) => {
         console.error("Error loading profiles:", error);
         onError(error as Error);
-      }
+      },
     );
   } catch (error) {
     onError(error as Error);
@@ -178,15 +179,15 @@ export const loadProfilesFromFirestore = (
 export const deleteProfileFromFirestore = async (
   userId: string,
   appId: string,
-  profileId: string
+  profileId: string,
 ) => {
-  if (!db) throw new Error('Firestore not initialized');
+  if (!db) throw new Error("Firestore not initialized");
 
   try {
     const docRef = doc(
       db,
       `artifacts/${appId}/users/${userId}/profiles`,
-      profileId
+      profileId,
     );
     await deleteDoc(docRef);
   } catch (error) {

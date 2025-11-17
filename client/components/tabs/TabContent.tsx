@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { LoadingIcon, ErrorIcon } from '@/components/icons';
+import { ReactNode } from "react";
+import { LoadingIcon, ErrorIcon } from "@/components/icons";
 
 interface TabContentProps {
   isLoading: boolean;
@@ -12,7 +12,7 @@ export const TabContent = ({
   isLoading,
   error,
   data,
-  children
+  children,
 }: TabContentProps) => {
   if (isLoading) {
     return (

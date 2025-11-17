@@ -1,6 +1,7 @@
-import { GeminiResponse, GroundingAttribution, Profile } from '@/types';
+import { GeminiResponse, GroundingAttribution, Profile } from "@/types";
 
-const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent';
+const API_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
 
 export interface GenerateProfileRequest {
   userQuery: string;
@@ -25,20 +26,25 @@ export interface KeyContentRequest {
 }
 
 export const callGeminiAPI = async (
-  request: GenerateProfileRequest | FollowUpRequest | KeyContentRequest
+  request: GenerateProfileRequest | FollowUpRequest | KeyContentRequest,
 ): Promise<Profile> => {
-  const { userQuery, systemPrompt, apiKey, includeSearch = true } = request as any;
+  const {
+    userQuery,
+    systemPrompt,
+    apiKey,
+    includeSearch = true,
+  } = request as any;
   const { context } = request as any;
   const { question } = request as any;
 
   const content = userQuery || context || question;
-  if (!content) throw new Error('No content provided for API call');
+  if (!content) throw new Error("No content provided for API call");
 
   const payload: any = {
     contents: [{ parts: [{ text: content }] }],
     systemInstruction: {
-      parts: [{ text: systemPrompt }]
-    }
+      parts: [{ text: systemPrompt }],
+    },
   };
 
   if (includeSearch) {
@@ -47,9 +53,9 @@ export const callGeminiAPI = async (
 
   try {
     const response = await fetch(`${API_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -64,7 +70,9 @@ export const callGeminiAPI = async (
           errorText = response.statusText || "Unknown error";
         }
       }
-      throw new Error(`API call failed with status ${response.status}: ${errorText}`);
+      throw new Error(
+        `API call failed with status ${response.status}: ${errorText}`,
+      );
     }
 
     const responseText = await response.text();
@@ -81,18 +89,26 @@ export const callGeminiAPI = async (
 
       if (candidate.groundingMetadata?.groundingAttributions) {
         sources = candidate.groundingMetadata.groundingAttributions
-          .map(attribution => ({
+          .map((attribution) => ({
             uri: attribution.web?.uri,
-            title: attribution.web?.title
+            title: attribution.web?.title,
           }))
-          .filter(source => source.uri && source.title) as GroundingAttribution[];
+          .filter(
+            (source) => source.uri && source.title,
+          ) as GroundingAttribution[];
       }
 
       return { text, sources };
     } else {
-      if (candidate && candidate.finishReason !== 'STOP') {
-        console.error("API call finished with reason:", candidate.finishReason, candidate.safetyRatings);
-        throw new Error(`API call failed: ${candidate.finishReason}. Check console for safety ratings.`);
+      if (candidate && candidate.finishReason !== "STOP") {
+        console.error(
+          "API call finished with reason:",
+          candidate.finishReason,
+          candidate.safetyRatings,
+        );
+        throw new Error(
+          `API call failed: ${candidate.finishReason}. Check console for safety ratings.`,
+        );
       }
       console.error("Invalid API response structure:", result);
       throw new Error("Invalid response structure from API.");
@@ -108,13 +124,13 @@ export const callGeminiAPI = async (
 export const generateAnalysisProfile = async (
   userQuery: string,
   systemPrompt: string,
-  apiKey: string
+  apiKey: string,
 ): Promise<Profile> => {
   return callGeminiAPI({
     userQuery,
     systemPrompt,
     apiKey,
-    includeSearch: true
+    includeSearch: true,
   });
 };
 
@@ -122,7 +138,7 @@ export const askAnalystFollowUp = async (
   question: string,
   context: string,
   systemPrompt: string,
-  apiKey: string
+  apiKey: string,
 ): Promise<Profile> => {
   const fullContext = `
     ---
@@ -138,7 +154,7 @@ export const askAnalystFollowUp = async (
     userQuery: fullContext,
     systemPrompt,
     apiKey,
-    includeSearch: true
+    includeSearch: true,
   });
 };
 
@@ -146,7 +162,7 @@ export const generateKeyContent = async (
   analysisText: string,
   rawData: string,
   systemPrompt: string,
-  apiKey: string
+  apiKey: string,
 ): Promise<Profile> => {
   const context = `
     ---
@@ -163,6 +179,6 @@ export const generateKeyContent = async (
     userQuery: context,
     systemPrompt,
     apiKey,
-    includeSearch: false
+    includeSearch: false,
   });
 };

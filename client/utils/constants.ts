@@ -1,18 +1,33 @@
 export const VENUE_OVERALL_STATS = [
-  'PPG',
-  'Scoring Rate',
-  'Conceding Rate',
-  'Clean sheets (%)',
-  'Games with a FHG (%)'
+  "PPG",
+  "Scoring Rate",
+  "Conceding Rate",
+  "Clean sheets (%)",
+  "Games with a FHG (%)",
 ];
 
 export const FIVE_MIN_SEGMENTS = [
-  '1-5', '6-10', '11-15', '16-20', '21-25', '26-30',
-  '31-35', '36-40', '41-45', '46-50', '51-55', '56-60',
-  '61-65', '66-70', '71-75', '76-80', '81-85', '86-90'
+  "1-5",
+  "6-10",
+  "11-15",
+  "16-20",
+  "21-25",
+  "26-30",
+  "31-35",
+  "36-40",
+  "41-45",
+  "46-50",
+  "51-55",
+  "56-60",
+  "61-65",
+  "66-70",
+  "71-75",
+  "76-80",
+  "81-85",
+  "86-90",
 ];
 
-export const LATE_SEGMENTS = ['76-80', '81-85', '86-90'];
+export const LATE_SEGMENTS = ["76-80", "81-85", "86-90"];
 
 export const SYSTEM_PROMPT = `You are a world-class football (soccer) trading analyst. Your task is to synthesize a new, complex set of proprietary statistical data with deep, real-time web research to produce a concise, actionable trading profile.
 
@@ -156,7 +171,7 @@ export const FIREBASE_CONFIG_PLACEHOLDER = {
   projectId: "YOUR_PROJECT_ID",
   storageBucket: "YOUR_STORAGE_BUCKET",
   messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  appId: "YOUR_APP_ID",
 };
 
 export const VOLATILITY_DEFAULT_STATE = {
@@ -166,5 +181,5 @@ export const VOLATILITY_DEFAULT_STATE = {
   scoredCV: 0,
   meanConceded: 0,
   stdDevConceded: 0,
-  concededCV: 0
+  concededCV: 0,
 };

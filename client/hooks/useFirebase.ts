@@ -1,14 +1,14 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Auth, Firestore, User } from 'firebase/auth';
+import { useEffect, useState, useCallback } from "react";
+import { Auth, Firestore, User } from "firebase/auth";
 import {
   initializeFirebase,
   setupAuthStateListener,
   signInUser,
   saveProfileToFirestore,
   loadProfilesFromFirestore,
-  deleteProfileFromFirestore
-} from '@/services/firebaseService';
-import { SavedProfile, ProfileInputs } from '@/types';
+  deleteProfileFromFirestore,
+} from "@/services/firebaseService";
+import { SavedProfile, ProfileInputs } from "@/types";
 
 interface UseFirebaseReturn {
   auth: Auth | null;
@@ -17,17 +17,17 @@ interface UseFirebaseReturn {
   isAuthenticated: boolean;
   isAuthLoading: boolean;
   authError: string | null;
-  
+
   myProfiles: SavedProfile[];
   isLoadingProfiles: boolean;
   profilesError: string | null;
-  
+
   saveProfile: (
     teamA: string,
     teamB: string,
     profileText: string,
     sources: any[],
-    inputs: ProfileInputs
+    inputs: ProfileInputs,
   ) => Promise<void>;
   deleteProfile: (profileId: string) => Promise<void>;
 }
@@ -58,12 +58,11 @@ export const useFirebase = (appId: string): UseFirebaseReturn => {
           } else {
             setUserId(null);
             // Sign in anonymously
-            signInUser()
-              .catch((error) => {
-                console.error("Anonymous sign-in failed:", error);
-                setAuthError("Firebase not fully configured");
-                setIsAuthLoading(false);
-              });
+            signInUser().catch((error) => {
+              console.error("Anonymous sign-in failed:", error);
+              setAuthError("Firebase not fully configured");
+              setIsAuthLoading(false);
+            });
           }
         });
 
@@ -97,7 +96,7 @@ export const useFirebase = (appId: string): UseFirebaseReturn => {
         console.error("Error loading profiles:", error);
         setProfilesError("Could not load profiles");
         setIsLoadingProfiles(false);
-      }
+      },
     );
 
     return () => {
@@ -112,7 +111,7 @@ export const useFirebase = (appId: string): UseFirebaseReturn => {
       teamB: string,
       profileText: string,
       sources: any[],
-      inputs: ProfileInputs
+      inputs: ProfileInputs,
     ) => {
       if (!userId || !db) {
         throw new Error("Not authenticated or database not initialized");
@@ -126,14 +125,14 @@ export const useFirebase = (appId: string): UseFirebaseReturn => {
           teamB,
           profileText,
           sources,
-          inputs
+          inputs,
         );
       } catch (error) {
         console.error("Error saving profile:", error);
         throw error;
       }
     },
-    [userId, db, appId]
+    [userId, db, appId],
   );
 
   // Delete profile from Firestore
@@ -150,7 +149,7 @@ export const useFirebase = (appId: string): UseFirebaseReturn => {
         throw error;
       }
     },
-    [userId, db, appId]
+    [userId, db, appId],
   );
 
   const isAuthenticated = !!userId;
@@ -166,6 +165,6 @@ export const useFirebase = (appId: string): UseFirebaseReturn => {
     isLoadingProfiles,
     profilesError,
     saveProfile,
-    deleteProfile
+    deleteProfile,
   };
 };

@@ -1,56 +1,63 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 import {
   Profile,
   ProfileInputs,
   PPGChartData,
-  SegmentChartData
-} from '@/types';
+  SegmentChartData,
+} from "@/types";
 import {
   parsePpgBlock,
   parseIndexBlock,
   parseNewFiveMinSegmentData,
   parseHalfDataBlock,
-  parseLeagueTable
-} from '@/services/parsingService';
+  parseLeagueTable,
+} from "@/services/parsingService";
 
 export const useProfile = () => {
   // Team names
-  const [teamA, setTeamA] = useState('');
-  const [teamB, setTeamB] = useState('');
+  const [teamA, setTeamA] = useState("");
+  const [teamB, setTeamB] = useState("");
 
   // Profile inputs
-  const [ppgBlock, setPpgBlock] = useState('');
-  const [indexBlock, setIndexBlock] = useState('');
-  const [homeFiveMinSegmentBlock, setHomeFiveMinSegmentBlock] = useState('');
-  const [awayFiveMinSegmentBlock, setAwayFiveMinSegmentBlock] = useState('');
-  const [halfDataScoredBlock, setHalfDataScoredBlock] = useState('');
-  const [halfDataConcededBlock, setHalfDataConcededBlock] = useState('');
-  const [overallStats, setOverallStats] = useState('');
-  const [atVenueStats, setAtVenueStats] = useState('');
-  const [leagueTable, setLeagueTable] = useState('');
-  const [homeRawResults, setHomeRawResults] = useState('');
-  const [awayRawResults, setAwayRawResults] = useState('');
+  const [ppgBlock, setPpgBlock] = useState("");
+  const [indexBlock, setIndexBlock] = useState("");
+  const [homeFiveMinSegmentBlock, setHomeFiveMinSegmentBlock] = useState("");
+  const [awayFiveMinSegmentBlock, setAwayFiveMinSegmentBlock] = useState("");
+  const [halfDataScoredBlock, setHalfDataScoredBlock] = useState("");
+  const [halfDataConcededBlock, setHalfDataConcededBlock] = useState("");
+  const [overallStats, setOverallStats] = useState("");
+  const [atVenueStats, setAtVenueStats] = useState("");
+  const [leagueTable, setLeagueTable] = useState("");
+  const [homeRawResults, setHomeRawResults] = useState("");
+  const [awayRawResults, setAwayRawResults] = useState("");
 
   // Generated profile
-  const [profile, setProfile] = useState<Profile>({ text: '', sources: [] });
+  const [profile, setProfile] = useState<Profile>({ text: "", sources: [] });
 
   // Chart data
   const [ppgChartData, setPpgChartData] = useState<PPGChartData[]>([]);
-  const [fiveMinSegmentChartData, setFiveMinSegmentChartData] = useState<SegmentChartData[]>([]);
+  const [fiveMinSegmentChartData, setFiveMinSegmentChartData] = useState<
+    SegmentChartData[]
+  >([]);
 
   // State for follow-up
-  const [followUpQuestion, setFollowUpQuestion] = useState('');
-  const [followUpAnswer, setFollowUpAnswer] = useState('');
+  const [followUpQuestion, setFollowUpQuestion] = useState("");
+  const [followUpAnswer, setFollowUpAnswer] = useState("");
 
   // State for lazy-loaded content
-  const [keyLearnings, setKeyLearnings] = useState('');
-  const [keyCharts, setKeyCharts] = useState('');
-  const [keyVisualisations, setKeyVisualisations] = useState('');
+  const [keyLearnings, setKeyLearnings] = useState("");
+  const [keyCharts, setKeyCharts] = useState("");
+  const [keyVisualisations, setKeyVisualisations] = useState("");
 
   // Tab state
   const [activeTab, setActiveTab] = useState<
-    'report' | 'charts' | 'visualisations' | 'analyst' | 'learnings' | 'myProfiles'
-  >('report');
+    | "report"
+    | "charts"
+    | "visualisations"
+    | "analyst"
+    | "learnings"
+    | "myProfiles"
+  >("report");
 
   // Get all inputs as an object
   const getInputs = useCallback((): ProfileInputs => {
@@ -65,7 +72,7 @@ export const useProfile = () => {
       atVenueStats,
       leagueTable,
       homeRawResults,
-      awayRawResults
+      awayRawResults,
     };
   }, [
     ppgBlock,
@@ -78,23 +85,35 @@ export const useProfile = () => {
     atVenueStats,
     leagueTable,
     homeRawResults,
-    awayRawResults
+    awayRawResults,
   ]);
 
   // Parse and set chart data
   const updateChartData = useCallback(() => {
     const ppgData = parsePpgBlock(ppgBlock, teamA, teamB);
-    const segmentData = parseNewFiveMinSegmentData(homeFiveMinSegmentBlock, awayFiveMinSegmentBlock);
+    const segmentData = parseNewFiveMinSegmentData(
+      homeFiveMinSegmentBlock,
+      awayFiveMinSegmentBlock,
+    );
 
     setPpgChartData(ppgData.chartData);
     setFiveMinSegmentChartData(segmentData.chartData);
-  }, [ppgBlock, homeFiveMinSegmentBlock, awayFiveMinSegmentBlock, teamA, teamB]);
+  }, [
+    ppgBlock,
+    homeFiveMinSegmentBlock,
+    awayFiveMinSegmentBlock,
+    teamA,
+    teamB,
+  ]);
 
   // Get parsed data for API calls
   const getParsedData = useCallback(() => {
     const ppgData = parsePpgBlock(ppgBlock, teamA, teamB);
     const indexData = parseIndexBlock(indexBlock);
-    const segmentData = parseNewFiveMinSegmentData(homeFiveMinSegmentBlock, awayFiveMinSegmentBlock);
+    const segmentData = parseNewFiveMinSegmentData(
+      homeFiveMinSegmentBlock,
+      awayFiveMinSegmentBlock,
+    );
     const parsedScoredHalfData = parseHalfDataBlock(halfDataScoredBlock);
     const parsedConcededHalfData = parseHalfDataBlock(halfDataConcededBlock);
     const numberOfTeams = parseLeagueTable(leagueTable);
@@ -105,7 +124,7 @@ export const useProfile = () => {
       segmentData,
       parsedScoredHalfData,
       parsedConcededHalfData,
-      numberOfTeams
+      numberOfTeams,
     };
   }, [
     ppgBlock,
@@ -116,61 +135,64 @@ export const useProfile = () => {
     halfDataConcededBlock,
     leagueTable,
     teamA,
-    teamB
+    teamB,
   ]);
 
   // Reset all state
   const resetProfile = useCallback(() => {
-    setProfile({ text: '', sources: [] });
+    setProfile({ text: "", sources: [] });
     setPpgChartData([]);
     setFiveMinSegmentChartData([]);
-    setFollowUpQuestion('');
-    setFollowUpAnswer('');
-    setKeyLearnings('');
-    setKeyCharts('');
-    setKeyVisualisations('');
-    setActiveTab('report');
+    setFollowUpQuestion("");
+    setFollowUpAnswer("");
+    setKeyLearnings("");
+    setKeyCharts("");
+    setKeyVisualisations("");
+    setActiveTab("report");
   }, []);
 
   // Load a saved profile
-  const loadProfile = useCallback((
-    teamAName: string,
-    teamBName: string,
-    profileText: string,
-    sources: any[],
-    inputs: ProfileInputs
-  ) => {
-    setTeamA(teamAName);
-    setTeamB(teamBName);
-    setPpgBlock(inputs.ppgBlock);
-    setIndexBlock(inputs.indexBlock);
-    setHomeFiveMinSegmentBlock(inputs.homeFiveMinSegmentBlock);
-    setAwayFiveMinSegmentBlock(inputs.awayFiveMinSegmentBlock);
-    setHalfDataScoredBlock(inputs.halfDataScoredBlock);
-    setHalfDataConcededBlock(inputs.halfDataConcededBlock);
-    setOverallStats(inputs.overallStats);
-    setAtVenueStats(inputs.atVenueStats);
-    setLeagueTable(inputs.leagueTable);
-    setHomeRawResults(inputs.homeRawResults);
-    setAwayRawResults(inputs.awayRawResults);
+  const loadProfile = useCallback(
+    (
+      teamAName: string,
+      teamBName: string,
+      profileText: string,
+      sources: any[],
+      inputs: ProfileInputs,
+    ) => {
+      setTeamA(teamAName);
+      setTeamB(teamBName);
+      setPpgBlock(inputs.ppgBlock);
+      setIndexBlock(inputs.indexBlock);
+      setHomeFiveMinSegmentBlock(inputs.homeFiveMinSegmentBlock);
+      setAwayFiveMinSegmentBlock(inputs.awayFiveMinSegmentBlock);
+      setHalfDataScoredBlock(inputs.halfDataScoredBlock);
+      setHalfDataConcededBlock(inputs.halfDataConcededBlock);
+      setOverallStats(inputs.overallStats);
+      setAtVenueStats(inputs.atVenueStats);
+      setLeagueTable(inputs.leagueTable);
+      setHomeRawResults(inputs.homeRawResults);
+      setAwayRawResults(inputs.awayRawResults);
 
-    setProfile({ text: profileText, sources });
-    setFollowUpQuestion('');
-    setFollowUpAnswer('');
-    setKeyCharts('');
-    setKeyLearnings('');
-    setKeyVisualisations('');
-    setActiveTab('report');
+      setProfile({ text: profileText, sources });
+      setFollowUpQuestion("");
+      setFollowUpAnswer("");
+      setKeyCharts("");
+      setKeyLearnings("");
+      setKeyVisualisations("");
+      setActiveTab("report");
 
-    // Re-run parsers
-    const ppgData = parsePpgBlock(inputs.ppgBlock, teamAName, teamBName);
-    const segmentData = parseNewFiveMinSegmentData(
-      inputs.homeFiveMinSegmentBlock,
-      inputs.awayFiveMinSegmentBlock
-    );
-    setPpgChartData(ppgData.chartData);
-    setFiveMinSegmentChartData(segmentData.chartData);
-  }, []);
+      // Re-run parsers
+      const ppgData = parsePpgBlock(inputs.ppgBlock, teamAName, teamBName);
+      const segmentData = parseNewFiveMinSegmentData(
+        inputs.homeFiveMinSegmentBlock,
+        inputs.awayFiveMinSegmentBlock,
+      );
+      setPpgChartData(ppgData.chartData);
+      setFiveMinSegmentChartData(segmentData.chartData);
+    },
+    [],
+  );
 
   return {
     // Team names
@@ -234,6 +256,6 @@ export const useProfile = () => {
     updateChartData,
     getParsedData,
     resetProfile,
-    loadProfile
+    loadProfile,
   };
 };

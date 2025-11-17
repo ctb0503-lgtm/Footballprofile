@@ -37,26 +37,26 @@ export interface ProfileInputs {
 export interface PPGChartData {
   name: string;
   PPG: number;
-  'PPG L8': number;
-  'Opp PPG L8': number;
-  'PPG Bias': number;
+  "PPG L8": number;
+  "Opp PPG L8": number;
+  "PPG Bias": number;
 }
 
 export interface SegmentChartData {
   segment: string;
-  'Home Scored': number;
-  'Home Conceded': number;
-  'Away Scored': number;
-  'Away Conceded': number;
+  "Home Scored": number;
+  "Home Conceded": number;
+  "Away Scored": number;
+  "Away Conceded": number;
 }
 
 export interface FormTrendChartData {
   name: string;
-  'L4 (Raw)'?: number;
-  'L8 (Raw)'?: number;
-  'L12 (Raw)'?: number;
-  'L8 (Stats)'?: number;
-  'Season (Stats)'?: number;
+  "L4 (Raw)"?: number;
+  "L8 (Raw)"?: number;
+  "L12 (Raw)"?: number;
+  "L8 (Stats)"?: number;
+  "Season (Stats)"?: number;
 }
 
 export interface VenueChartData {
@@ -91,7 +91,7 @@ export interface HeatmapCellData {
 // Flag types
 export interface AnalyticalFlag {
   id: string;
-  type: 'good' | 'bad' | 'clash' | 'alert';
+  type: "good" | "bad" | "clash" | "alert";
   title: string;
   desc: string;
 }

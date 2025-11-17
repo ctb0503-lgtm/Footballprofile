@@ -8,18 +8,35 @@ import {
   HalfDataStats,
   PPGFlagsData,
   VenueFlagsData,
-  IndexFlagsData
-} from '@/types';
-import { FIVE_MIN_SEGMENTS, LATE_SEGMENTS } from '@/utils/constants';
+  IndexFlagsData,
+} from "@/types";
+import { FIVE_MIN_SEGMENTS, LATE_SEGMENTS } from "@/utils/constants";
 
-export const parsePpgBlock = (data: string, teamA?: string, teamB?: string): PPGParseResult => {
-  if (!data) return { chartData: [], fullBlock: '', home: '', away: '' };
-  const lines = data.split('\n');
-  let homeStats = { name: teamA || 'Home', PPG: 0, 'PPG L8': 0, 'Opp PPG L8': 0, 'PPG Bias': 0 };
-  let awayStats = { name: teamB || 'Away', PPG: 0, 'PPG L8': 0, 'Opp PPG L8': 0, 'PPG Bias': 0 };
-  let homeText = [], awayText = [];
+export const parsePpgBlock = (
+  data: string,
+  teamA?: string,
+  teamB?: string,
+): PPGParseResult => {
+  if (!data) return { chartData: [], fullBlock: "", home: "", away: "" };
+  const lines = data.split("\n");
+  let homeStats = {
+    name: teamA || "Home",
+    PPG: 0,
+    "PPG L8": 0,
+    "Opp PPG L8": 0,
+    "PPG Bias": 0,
+  };
+  let awayStats = {
+    name: teamB || "Away",
+    PPG: 0,
+    "PPG L8": 0,
+    "Opp PPG L8": 0,
+    "PPG Bias": 0,
+  };
+  let homeText = [],
+    awayText = [];
 
-  lines.forEach(line => {
+  lines.forEach((line) => {
     const trimmed = line.trim();
     const parts = trimmed.split(/\s{2,}/);
     if (parts.length >= 6) {
@@ -28,24 +45,24 @@ export const parsePpgBlock = (data: string, teamA?: string, teamB?: string): PPG
         const homeVal = parseFloat(parts[parts.length - 3]);
         const awayVal = parseFloat(parts[parts.length - 2]);
 
-        if (statName.startsWith('PPG') && !statName.includes('Opp')) {
+        if (statName.startsWith("PPG") && !statName.includes("Opp")) {
           homeStats.PPG = homeVal;
           awayStats.PPG = awayVal;
           homeText.push(`${statName}: ${homeVal}`);
           awayText.push(`${statName}: ${awayVal}`);
-        } else if (statName.startsWith('PPG L8')) {
-          homeStats['PPG L8'] = homeVal;
-          awayStats['PPG L8'] = awayVal;
+        } else if (statName.startsWith("PPG L8")) {
+          homeStats["PPG L8"] = homeVal;
+          awayStats["PPG L8"] = awayVal;
           homeText.push(`${statName}: ${homeVal}`);
           awayText.push(`${statName}: ${awayVal}`);
-        } else if (statName.startsWith('Opp PPG L8')) {
-          homeStats['Opp PPG L8'] = homeVal;
-          awayStats['Opp PPG L8'] = awayVal;
+        } else if (statName.startsWith("Opp PPG L8")) {
+          homeStats["Opp PPG L8"] = homeVal;
+          awayStats["Opp PPG L8"] = awayVal;
           homeText.push(`${statName}: ${homeVal}`);
           awayText.push(`${statName}: ${awayVal}`);
-        } else if (statName.startsWith('PPG Bias')) {
-          homeStats['PPG Bias'] = homeVal;
-          awayStats['PPG Bias'] = awayVal;
+        } else if (statName.startsWith("PPG Bias")) {
+          homeStats["PPG Bias"] = homeVal;
+          awayStats["PPG Bias"] = awayVal;
           homeText.push(`${statName}: ${homeVal}`);
           awayText.push(`${statName}: ${awayVal}`);
         }
@@ -58,17 +75,19 @@ export const parsePpgBlock = (data: string, teamA?: string, teamB?: string): PPG
   return {
     chartData: [homeStats, awayStats],
     fullBlock: data,
-    home: homeText.join('\n'),
-    away: awayText.join('\n')
+    home: homeText.join("\n"),
+    away: awayText.join("\n"),
   };
 };
 
 export const parseIndexBlock = (data: string): IndexParseResult => {
-  if (!data) return { fullBlock: '', home: '', away: '', shared: '' };
-  let homeText = [], awayText = [], sharedText = [];
-  const lines = data.split('\n');
+  if (!data) return { fullBlock: "", home: "", away: "", shared: "" };
+  let homeText = [],
+    awayText = [],
+    sharedText = [];
+  const lines = data.split("\n");
 
-  lines.forEach(line => {
+  lines.forEach((line) => {
     const trimmed = line.trim();
     const parts = trimmed.split(/\s{2,}/);
     if (parts.length >= 4) {
@@ -77,66 +96,78 @@ export const parseIndexBlock = (data: string): IndexParseResult => {
       const awayVal = parts[parts.length - 1];
       homeText.push(`${statName}: ${homeVal}`);
       awayText.push(`${statName}: ${awayVal}`);
-    } else if (parts.length === 2 && (parts[0].startsWith('H v A') || parts[0].startsWith('Goal Edge'))) {
+    } else if (
+      parts.length === 2 &&
+      (parts[0].startsWith("H v A") || parts[0].startsWith("Goal Edge"))
+    ) {
       sharedText.push(trimmed);
     }
   });
 
   return {
     fullBlock: data,
-    home: homeText.join('\n'),
-    away: awayText.join('\n'),
-    shared: sharedText.join('\n')
+    home: homeText.join("\n"),
+    away: awayText.join("\n"),
+    shared: sharedText.join("\n"),
   };
 };
 
-export const parseNewFiveMinSegmentData = (homeData: string, awayData: string): FiveMinParseResult => {
+export const parseNewFiveMinSegmentData = (
+  homeData: string,
+  awayData: string,
+): FiveMinParseResult => {
   if (!homeData || !awayData) {
     return {
       chartData: [],
-      homeLines: '',
-      awayLines: '',
-      homeTotalGoals: 'Scored: 0, Conceded: 0',
-      awayTotalGoals: 'Scored: 0, Conceded: 0'
+      homeLines: "",
+      awayLines: "",
+      homeTotalGoals: "Scored: 0, Conceded: 0",
+      awayTotalGoals: "Scored: 0, Conceded: 0",
     };
   }
 
-  let chartData = FIVE_MIN_SEGMENTS.map(s => ({
+  let chartData = FIVE_MIN_SEGMENTS.map((s) => ({
     segment: s,
-    'Home Scored': 0, 'Home Conceded': 0,
-    'Away Scored': 0, 'Away Conceded': 0
+    "Home Scored": 0,
+    "Home Conceded": 0,
+    "Away Scored": 0,
+    "Away Conceded": 0,
   }));
 
-  let homeLines = [], awayLines = [];
-  let homeTotalScored = 0, homeTotalConceded = 0;
-  let awayTotalScored = 0, awayTotalConceded = 0;
+  let homeLines = [],
+    awayLines = [];
+  let homeTotalScored = 0,
+    homeTotalConceded = 0;
+  let awayTotalScored = 0,
+    awayTotalConceded = 0;
 
-  const parseBlock = (data: string, context: 'home' | 'away') => {
-    const lines = data.split('\n');
-    lines.forEach(line => {
+  const parseBlock = (data: string, context: "home" | "away") => {
+    const lines = data.split("\n");
+    lines.forEach((line) => {
       const trimmedLine = line.trim();
       const statName = FIVE_MIN_SEGMENTS.find(
-        s => trimmedLine.startsWith(s + ' ') || trimmedLine.startsWith(s + '\t')
+        (s) =>
+          trimmedLine.startsWith(s + " ") || trimmedLine.startsWith(s + "\t"),
       );
       if (statName) {
         const parts = trimmedLine.split(/\s{2,}/);
         if (parts.length >= 4) {
-          const val = parts[context === 'home' ? 2 : 3];
-          const score = val.split('-');
+          const val = parts[context === "home" ? 2 : 3];
+          const score = val.split("-");
           if (score.length === 2) {
             const scored = parseFloat(score[0]) || 0;
             const conceded = parseFloat(score[1]) || 0;
-            const chartEntry = chartData.find(c => c.segment === statName);
+            const chartEntry = chartData.find((c) => c.segment === statName);
             if (chartEntry) {
-              if (context === 'home') {
-                chartEntry['Home Scored'] = scored;
-                chartEntry['Home Conceded'] = conceded;
+              if (context === "home") {
+                chartEntry["Home Scored"] = scored;
+                chartEntry["Home Conceded"] = conceded;
                 homeTotalScored += scored;
                 homeTotalConceded += conceded;
                 homeLines.push(`${statName}: ${val}`);
               } else {
-                chartEntry['Away Scored'] = scored;
-                chartEntry['Away Conceded'] = conceded;
+                chartEntry["Away Scored"] = scored;
+                chartEntry["Away Conceded"] = conceded;
                 awayTotalScored += scored;
                 awayTotalConceded += conceded;
                 awayLines.push(`${statName}: ${val}`);
@@ -148,68 +179,85 @@ export const parseNewFiveMinSegmentData = (homeData: string, awayData: string): 
     });
   };
 
-  parseBlock(homeData, 'home');
-  parseBlock(awayData, 'away');
+  parseBlock(homeData, "home");
+  parseBlock(awayData, "away");
 
   return {
     chartData,
-    homeLines: homeLines.join('\n'),
-    awayLines: awayLines.join('\n'),
+    homeLines: homeLines.join("\n"),
+    awayLines: awayLines.join("\n"),
     homeTotalGoals: `Scored: ${homeTotalScored}, Conceded: ${homeTotalConceded}`,
-    awayTotalGoals: `Scored: ${awayTotalScored}, Conceded: ${awayTotalConceded}`
+    awayTotalGoals: `Scored: ${awayTotalScored}, Conceded: ${awayTotalConceded}`,
   };
 };
 
 export const parseHalfDataBlock = (data: string): HalfDataParseResult => {
   if (!data) {
     return {
-      homeH2H: '',
-      awayA2A: '',
-      venue: '',
-      homeSeason: '',
-      awaySeason: '',
-      avg: ''
+      homeH2H: "",
+      awayA2A: "",
+      venue: "",
+      homeSeason: "",
+      awaySeason: "",
+      avg: "",
     };
   }
-  const lines = data.split('\n');
-  let homeH2HLines = [], awayA2ALines = [], venueLines = [], homeSeasonLines = [], awaySeasonLines = [], avgLines = [];
+  const lines = data.split("\n");
+  let homeH2HLines = [],
+    awayA2ALines = [],
+    venueLines = [],
+    homeSeasonLines = [],
+    awaySeasonLines = [],
+    avgLines = [];
   let currentSection: string | null = null;
 
-  lines.forEach(line => {
+  lines.forEach((line) => {
     const trimmed = line.trim();
-    if (trimmed.startsWith('H@H:')) currentSection = 'homeH2H';
-    else if (trimmed.startsWith('A@A:')) currentSection = 'awayA2A';
-    else if (trimmed.startsWith('Venue:')) currentSection = 'venue';
-    else if (trimmed.startsWith('Home Season:')) currentSection = 'homeSeason';
-    else if (trimmed.startsWith('Away Season:')) currentSection = 'awaySeason';
-    else if (trimmed.startsWith('Avg:')) currentSection = 'avg';
+    if (trimmed.startsWith("H@H:")) currentSection = "homeH2H";
+    else if (trimmed.startsWith("A@A:")) currentSection = "awayA2A";
+    else if (trimmed.startsWith("Venue:")) currentSection = "venue";
+    else if (trimmed.startsWith("Home Season:")) currentSection = "homeSeason";
+    else if (trimmed.startsWith("Away Season:")) currentSection = "awaySeason";
+    else if (trimmed.startsWith("Avg:")) currentSection = "avg";
     else if (currentSection && trimmed) {
       switch (currentSection) {
-        case 'homeH2H': homeH2HLines.push(trimmed); break;
-        case 'awayA2A': awayA2ALines.push(trimmed); break;
-        case 'venue': venueLines.push(trimmed); break;
-        case 'homeSeason': homeSeasonLines.push(trimmed); break;
-        case 'awaySeason': awaySeasonLines.push(trimmed); break;
-        case 'avg': avgLines.push(trimmed); break;
+        case "homeH2H":
+          homeH2HLines.push(trimmed);
+          break;
+        case "awayA2A":
+          awayA2ALines.push(trimmed);
+          break;
+        case "venue":
+          venueLines.push(trimmed);
+          break;
+        case "homeSeason":
+          homeSeasonLines.push(trimmed);
+          break;
+        case "awaySeason":
+          awaySeasonLines.push(trimmed);
+          break;
+        case "avg":
+          avgLines.push(trimmed);
+          break;
       }
     }
   });
 
   return {
-    homeH2H: homeH2HLines.join('\n'),
-    awayA2A: awayA2ALines.join('\n'),
-    venue: venueLines.join('\n'),
-    homeSeason: homeSeasonLines.join('\n'),
-    awaySeason: awaySeasonLines.join('\n'),
-    avg: avgLines.join('\n')
+    homeH2H: homeH2HLines.join("\n"),
+    awayA2A: awayA2ALines.join("\n"),
+    venue: venueLines.join("\n"),
+    homeSeason: homeSeasonLines.join("\n"),
+    awaySeason: awaySeasonLines.join("\n"),
+    avg: avgLines.join("\n"),
   };
 };
 
 export const parseLeagueTable = (data: string): number | null => {
   if (!data) return null;
-  const lines = data.split('\n');
+  const lines = data.split("\n");
   let teamCount = 0;
-  lines.forEach(line => {
+  lines.forEach((line) => {
     if (line.trim().match(/^\d+\s+/)) teamCount++;
   });
   return teamCount > 0 ? teamCount : null;
@@ -221,19 +269,27 @@ export const calculateStdDev = (arr: number[]) => {
   if (mean === 0) return { mean: 0, stdDev: 0 };
 
   const stdDev = Math.sqrt(
-    arr.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / arr.length
+    arr.map((x) => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) /
+      arr.length,
   );
   return { mean, stdDev };
 };
 
-export const parseRawResultsData = (rawResults: string, teamName: string, context: 'home' | 'away'): RawResultsStats => {
-  if (!rawResults || !teamName) return { ppgL4: 0, ppgL8: 0, ppgL12: 0, gamesFound: 0 };
-  const lines = rawResults.split('\n').filter(Boolean);
+export const parseRawResultsData = (
+  rawResults: string,
+  teamName: string,
+  context: "home" | "away",
+): RawResultsStats => {
+  if (!rawResults || !teamName)
+    return { ppgL4: 0, ppgL8: 0, ppgL12: 0, gamesFound: 0 };
+  const lines = rawResults.split("\n").filter(Boolean);
   const points = [];
   const lowerTeamName = teamName.toLowerCase();
 
   for (const line of lines) {
-    const match = line.match(/^(?:[\d\s\w]+\s+)?(.*?)\s+v\s+(.*?)\s+(\d+)-(\d+)/);
+    const match = line.match(
+      /^(?:[\d\s\w]+\s+)?(.*?)\s+v\s+(.*?)\s+(\d+)-(\d+)/,
+    );
     if (!match) continue;
 
     try {
@@ -244,11 +300,17 @@ export const parseRawResultsData = (rawResults: string, teamName: string, contex
 
       let teamPoints = -1;
 
-      if (context === 'home' && homeTeam.toLowerCase().includes(lowerTeamName)) {
+      if (
+        context === "home" &&
+        homeTeam.toLowerCase().includes(lowerTeamName)
+      ) {
         if (homeScore > awayScore) teamPoints = 3;
         else if (homeScore === awayScore) teamPoints = 1;
         else teamPoints = 0;
-      } else if (context === 'away' && awayTeam.toLowerCase().includes(lowerTeamName)) {
+      } else if (
+        context === "away" &&
+        awayTeam.toLowerCase().includes(lowerTeamName)
+      ) {
         if (awayScore > homeScore) teamPoints = 3;
         else if (awayScore === homeScore) teamPoints = 1;
         else teamPoints = 0;
@@ -260,7 +322,8 @@ export const parseRawResultsData = (rawResults: string, teamName: string, contex
     }
   }
 
-  const calculatePpg = (arr: number[]) => arr.length > 0 ? (arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
+  const calculatePpg = (arr: number[]) =>
+    arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
 
   const l4 = points.slice(0, 4);
   const l8 = points.slice(0, 8);
@@ -270,11 +333,15 @@ export const parseRawResultsData = (rawResults: string, teamName: string, contex
     ppgL4: calculatePpg(l4),
     ppgL8: calculatePpg(l8),
     ppgL12: calculatePpg(l12),
-    gamesFound: points.length
+    gamesFound: points.length,
   };
 };
 
-export const parseVolatilityData = (rawResults: string, teamName: string, context: 'home' | 'away') => {
+export const parseVolatilityData = (
+  rawResults: string,
+  teamName: string,
+  context: "home" | "away",
+) => {
   const defaultStats = {
     volatilityPercent: 0,
     meanScored: 0,
@@ -282,12 +349,12 @@ export const parseVolatilityData = (rawResults: string, teamName: string, contex
     scoredCV: 0,
     meanConceded: 0,
     stdDevConceded: 0,
-    concededCV: 0
+    concededCV: 0,
   };
 
   if (!rawResults || !teamName) return defaultStats;
 
-  const lines = (rawResults || "").split('\n').filter(Boolean);
+  const lines = (rawResults || "").split("\n").filter(Boolean);
   const goalsScored: number[] = [];
   const goalsConceded: number[] = [];
   const lowerTeamName = (teamName || "").toLowerCase();
@@ -295,7 +362,9 @@ export const parseVolatilityData = (rawResults: string, teamName: string, contex
   if (!lowerTeamName) return defaultStats;
 
   for (const line of lines) {
-    const match = line.match(/^(?:[\d\s\w]+\s+)?(.*?)\s+v\s+(.*?)\s+(\d+)-(\d+)/);
+    const match = line.match(
+      /^(?:[\d\s\w]+\s+)?(.*?)\s+v\s+(.*?)\s+(\d+)-(\d+)/,
+    );
     if (!match) continue;
 
     try {
@@ -304,10 +373,16 @@ export const parseVolatilityData = (rawResults: string, teamName: string, contex
       const homeScore = parseInt(match[3]);
       const awayScore = parseInt(match[4]);
 
-      if (context === 'home' && homeTeam.toLowerCase().includes(lowerTeamName)) {
+      if (
+        context === "home" &&
+        homeTeam.toLowerCase().includes(lowerTeamName)
+      ) {
         goalsScored.push(homeScore);
         goalsConceded.push(awayScore);
-      } else if (context === 'away' && awayTeam.toLowerCase().includes(lowerTeamName)) {
+      } else if (
+        context === "away" &&
+        awayTeam.toLowerCase().includes(lowerTeamName)
+      ) {
         goalsScored.push(awayScore);
         goalsConceded.push(homeScore);
       }
@@ -321,8 +396,10 @@ export const parseVolatilityData = (rawResults: string, teamName: string, contex
   const scoredStats = calculateStdDev(goalsScored);
   const concededStats = calculateStdDev(goalsConceded);
 
-  const scoredCV = (scoredStats.mean > 0) ? (scoredStats.stdDev / scoredStats.mean) : 0;
-  const concededCV = (concededStats.mean > 0) ? (concededStats.stdDev / concededStats.mean) : 0;
+  const scoredCV =
+    scoredStats.mean > 0 ? scoredStats.stdDev / scoredStats.mean : 0;
+  const concededCV =
+    concededStats.mean > 0 ? concededStats.stdDev / concededStats.mean : 0;
 
   const avgCV = (scoredCV + concededCV) / 2;
   const volatilityPercent = Math.min(avgCV / 1.0, 1.5) * 100;
@@ -334,22 +411,25 @@ export const parseVolatilityData = (rawResults: string, teamName: string, contex
     scoredCV,
     meanConceded: concededStats.mean,
     stdDevConceded: concededStats.stdDev,
-    concededCV
+    concededCV,
   };
 };
 
 export const parsePpgForFlags = (ppgBlock: string): PPGFlagsData => {
-  const lines = (ppgBlock || '').split('\n');
-  let homeL8 = 0, awayL8 = 0, homeBias = 0, awayBias = 0;
-  lines.forEach(line => {
+  const lines = (ppgBlock || "").split("\n");
+  let homeL8 = 0,
+    awayL8 = 0,
+    homeBias = 0,
+    awayBias = 0;
+  lines.forEach((line) => {
     const trimmedLine = line.trim();
-    if (trimmedLine.startsWith('PPG L8')) {
+    if (trimmedLine.startsWith("PPG L8")) {
       const parts = trimmedLine.split(/\s{2,}/);
       if (parts.length >= 6) {
         homeL8 = parseFloat(parts[parts.length - 3] || 0);
         awayL8 = parseFloat(parts[parts.length - 2] || 0);
       }
-    } else if (trimmedLine.startsWith('PPG Bias')) {
+    } else if (trimmedLine.startsWith("PPG Bias")) {
       const parts = trimmedLine.split(/\s{2,}/);
       if (parts.length >= 6) {
         homeBias = parseFloat(parts[parts.length - 3] || 0);
@@ -361,11 +441,21 @@ export const parsePpgForFlags = (ppgBlock: string): PPGFlagsData => {
 };
 
 export const parseVenueForFlags = (atVenueStats: string): VenueFlagsData => {
-  const lines = (atVenueStats || '').split('\n');
-  let homePpg = 0, awayPpg = 0, homeFTS = 0, awayFTS = 0, homeFTC = 0, awayFTC = 0;
-  let homeFHG = 0, awayFHG = 0, homeCleanSheet = 0, awayCleanSheet = 0, homeScoringRate = 0, awayScoringRate = 0;
+  const lines = (atVenueStats || "").split("\n");
+  let homePpg = 0,
+    awayPpg = 0,
+    homeFTS = 0,
+    awayFTS = 0,
+    homeFTC = 0,
+    awayFTC = 0;
+  let homeFHG = 0,
+    awayFHG = 0,
+    homeCleanSheet = 0,
+    awayCleanSheet = 0,
+    homeScoringRate = 0,
+    awayScoringRate = 0;
 
-  lines.forEach(line => {
+  lines.forEach((line) => {
     const trimmedLine = line.trim();
     const parts = trimmedLine.split(/\s{2,}/);
     if (parts.length >= 3) {
@@ -373,22 +463,26 @@ export const parseVenueForFlags = (atVenueStats: string): VenueFlagsData => {
       const homeVal = parseFloat(parts[1] || 0);
       const awayVal = parseFloat(parts[2] || 0);
 
-      if (statName.startsWith('PPG')) {
+      if (statName.startsWith("PPG")) {
         homePpg = homeVal;
         awayPpg = awayVal;
-      } else if (statName.startsWith('First to score (%)')) {
+      } else if (statName.startsWith("First to score (%)")) {
         homeFTS = homeVal;
         awayFTS = awayVal;
-      } else if (statName.startsWith('First to concede (%)')) {
+      } else if (statName.startsWith("First to concede (%)")) {
         homeFTC = homeVal;
         awayFTC = awayVal;
-      } else if (statName.startsWith('Games with a FHG (%)')) {
+      } else if (statName.startsWith("Games with a FHG (%)")) {
         homeFHG = homeVal;
         awayFHG = awayVal;
-      } else if (statName.startsWith('Clean sheets (%)')) {
+      } else if (statName.startsWith("Clean sheets (%)")) {
         homeCleanSheet = homeVal;
         awayCleanSheet = awayVal;
-      } else if (statName.startsWith('Scoring Rate') && !statName.includes('L8') && !statName.includes('Half')) {
+      } else if (
+        statName.startsWith("Scoring Rate") &&
+        !statName.includes("L8") &&
+        !statName.includes("Half")
+      ) {
         homeScoringRate = homeVal;
         awayScoringRate = awayVal;
       }
@@ -396,29 +490,43 @@ export const parseVenueForFlags = (atVenueStats: string): VenueFlagsData => {
   });
 
   return {
-    homePpg, awayPpg, homeFTS, awayFTS, homeFTC, awayFTC,
-    homeFHG, awayFHG, homeCleanSheet, awayCleanSheet, homeScoringRate, awayScoringRate
+    homePpg,
+    awayPpg,
+    homeFTS,
+    awayFTS,
+    homeFTC,
+    awayFTC,
+    homeFHG,
+    awayFHG,
+    homeCleanSheet,
+    awayCleanSheet,
+    homeScoringRate,
+    awayScoringRate,
   };
 };
 
 export const parseIndexForFlags = (indexBlock: string): IndexFlagsData => {
-  const lines = (indexBlock || '').split('\n');
-  let homeOffence = 0, homeDefence = 0, awayOffence = 0, awayDefence = 0;
-  let hva = 0, goalEdge = 0;
+  const lines = (indexBlock || "").split("\n");
+  let homeOffence = 0,
+    homeDefence = 0,
+    awayOffence = 0,
+    awayDefence = 0;
+  let hva = 0,
+    goalEdge = 0;
 
-  lines.forEach(line => {
+  lines.forEach((line) => {
     const trimmedLine = line.trim();
     const parts = trimmedLine.split(/\s{2,}/);
 
-    if (trimmedLine.startsWith('Offence') && parts.length >= 3) {
+    if (trimmedLine.startsWith("Offence") && parts.length >= 3) {
       homeOffence = parseFloat(parts[1] || 0);
       awayOffence = parseFloat(parts[2] || 0);
-    } else if (trimmedLine.startsWith('Defence') && parts.length >= 3) {
+    } else if (trimmedLine.startsWith("Defence") && parts.length >= 3) {
       homeDefence = parseFloat(parts[1] || 0);
       awayDefence = parseFloat(parts[2] || 0);
-    } else if (trimmedLine.startsWith('H v A') && parts.length >= 2) {
+    } else if (trimmedLine.startsWith("H v A") && parts.length >= 2) {
       hva = parseFloat(parts[1] || 0);
-    } else if (trimmedLine.startsWith('Goal Edge') && parts.length >= 2) {
+    } else if (trimmedLine.startsWith("Goal Edge") && parts.length >= 2) {
       goalEdge = parseFloat(parts[1] || 0);
     }
   });
@@ -427,21 +535,27 @@ export const parseIndexForFlags = (indexBlock: string): IndexFlagsData => {
 };
 
 export const parse5MinForFlags = (home5min: string, away5min: string) => {
-  let homeScoredLate = 0, homeConcededLate = 0;
-  let awayScoredLate = 0, awayConcededLate = 0;
+  let homeScoredLate = 0,
+    homeConcededLate = 0;
+  let awayScoredLate = 0,
+    awayConcededLate = 0;
 
-  const parseBlock = (data: string, context: 'home' | 'away') => {
+  const parseBlock = (data: string, context: "home" | "away") => {
     if (!data) return { scored: 0, conceded: 0 };
-    let scored = 0, conceded = 0;
-    const lines = data.split('\n');
-    lines.forEach(line => {
+    let scored = 0,
+      conceded = 0;
+    const lines = data.split("\n");
+    lines.forEach((line) => {
       const trimmedLine = line.trim();
-      const statName = LATE_SEGMENTS.find(s => trimmedLine.startsWith(s + ' ') || trimmedLine.startsWith(s + '\t'));
+      const statName = LATE_SEGMENTS.find(
+        (s) =>
+          trimmedLine.startsWith(s + " ") || trimmedLine.startsWith(s + "\t"),
+      );
       if (statName) {
         const parts = trimmedLine.split(/\s{2,}/);
         if (parts.length >= 4) {
-          const val = parts[context === 'home' ? 2 : 3];
-          const score = val.split('-');
+          const val = parts[context === "home" ? 2 : 3];
+          const score = val.split("-");
           if (score.length === 2) {
             scored += parseFloat(score[0]) || 0;
             conceded += parseFloat(score[1]) || 0;
@@ -452,14 +566,14 @@ export const parse5MinForFlags = (home5min: string, away5min: string) => {
     return { scored, conceded };
   };
 
-  const homeLate = parseBlock(home5min, 'home');
-  const awayLate = parseBlock(away5min, 'away');
+  const homeLate = parseBlock(home5min, "home");
+  const awayLate = parseBlock(away5min, "away");
 
   return {
     homeScoredLate: homeLate.scored,
     homeConcededLate: homeLate.conceded,
     awayScoredLate: awayLate.scored,
-    awayConcededLate: awayLate.conceded
+    awayConcededLate: awayLate.conceded,
   };
 };
 
@@ -467,18 +581,27 @@ export const parseResilienceForFlags = (
   homeRawResults: string,
   awayRawResults: string,
   homeTeamName: string,
-  awayTeamName: string
+  awayTeamName: string,
 ): ResilienceStats => {
-  const parseTeamResilience = (rawResults: string, teamName: string, context: 'home' | 'away') => {
-    if (!rawResults || !teamName) return { comebackRate: 0, droppedPointsRate: 0 };
-    const lines = rawResults.split('\n').filter(Boolean);
+  const parseTeamResilience = (
+    rawResults: string,
+    teamName: string,
+    context: "home" | "away",
+  ) => {
+    if (!rawResults || !teamName)
+      return { comebackRate: 0, droppedPointsRate: 0 };
+    const lines = rawResults.split("\n").filter(Boolean);
     const lowerTeamName = teamName.toLowerCase();
 
-    let htLead = 0, htLead_DroppedPoints = 0;
-    let htLoss = 0, htLoss_Comeback = 0;
+    let htLead = 0,
+      htLead_DroppedPoints = 0;
+    let htLoss = 0,
+      htLoss_Comeback = 0;
 
     for (const line of lines) {
-      const match = line.match(/^(.*?)\s+v\s+(.*?)\s+(\d+)-(\d+)\s+\((\d+)-(\d+)\)/);
+      const match = line.match(
+        /^(.*?)\s+v\s+(.*?)\s+(\d+)-(\d+)\s+\((\d+)-(\d+)\)/,
+      );
       if (!match) continue;
 
       try {
@@ -491,10 +614,16 @@ export const parseResilienceForFlags = (
 
         let htResult, ftResult;
 
-        if (context === 'home' && homeTeam.toLowerCase().includes(lowerTeamName)) {
+        if (
+          context === "home" &&
+          homeTeam.toLowerCase().includes(lowerTeamName)
+        ) {
           htResult = homeHT - awayHT;
           ftResult = homeFT - awayFT;
-        } else if (context === 'away' && awayTeam.toLowerCase().includes(lowerTeamName)) {
+        } else if (
+          context === "away" &&
+          awayTeam.toLowerCase().includes(lowerTeamName)
+        ) {
           htResult = awayHT - homeHT;
           ftResult = awayFT - homeFT;
         } else {
@@ -513,31 +642,48 @@ export const parseResilienceForFlags = (
       }
     }
 
-    const comebackRate = (htLoss > 0) ? (htLoss_Comeback / htLoss) * 100 : 0;
-    const droppedPointsRate = (htLead > 0) ? (htLead_DroppedPoints / htLead) * 100 : 0;
+    const comebackRate = htLoss > 0 ? (htLoss_Comeback / htLoss) * 100 : 0;
+    const droppedPointsRate =
+      htLead > 0 ? (htLead_DroppedPoints / htLead) * 100 : 0;
 
     return { comebackRate, droppedPointsRate };
   };
 
-  const homeResilience = parseTeamResilience(homeRawResults, homeTeamName, 'home');
-  const awayResilience = parseTeamResilience(awayRawResults, awayTeamName, 'away');
+  const homeResilience = parseTeamResilience(
+    homeRawResults,
+    homeTeamName,
+    "home",
+  );
+  const awayResilience = parseTeamResilience(
+    awayRawResults,
+    awayTeamName,
+    "away",
+  );
 
   return {
     homeComeback: homeResilience.comebackRate,
     homeDropped: homeResilience.droppedPointsRate,
     awayComeback: awayResilience.comebackRate,
-    awayDropped: awayResilience.droppedPointsRate
+    awayDropped: awayResilience.droppedPointsRate,
   };
 };
 
-export const parseHalfDataForFlags = (scoredBlock: string, concededBlock: string): HalfDataStats => {
+export const parseHalfDataForFlags = (
+  scoredBlock: string,
+  concededBlock: string,
+): HalfDataStats => {
   const parseBlock = (block: string, category: string) => {
     if (!block) return { homePct: 0, awayPct: 0 };
-    const lines = block.split('\n');
-    let homeH2HLine = lines.find(l => l.trim().startsWith('H@H:') && l.includes('GOALS BY HALF'));
-    let awayA2ALine = lines.find(l => l.trim().startsWith('A@A:') && l.includes('GOALS BY HALF'));
+    const lines = block.split("\n");
+    let homeH2HLine = lines.find(
+      (l) => l.trim().startsWith("H@H:") && l.includes("GOALS BY HALF"),
+    );
+    let awayA2ALine = lines.find(
+      (l) => l.trim().startsWith("A@A:") && l.includes("GOALS BY HALF"),
+    );
 
-    let homePct = 0, awayPct = 0;
+    let homePct = 0,
+      awayPct = 0;
 
     if (homeH2HLine) {
       const match = homeH2HLine.match(/2nd\s+(\d+)%/);
@@ -550,13 +696,13 @@ export const parseHalfDataForFlags = (scoredBlock: string, concededBlock: string
     return { homePct, awayPct };
   };
 
-  const scoredData = parseBlock(scoredBlock, 'scored');
-  const concededData = parseBlock(concededBlock, 'conceded');
+  const scoredData = parseBlock(scoredBlock, "scored");
+  const concededData = parseBlock(concededBlock, "conceded");
 
   return {
     homeScoredHalf2Pct: scoredData.homePct,
     awayScoredHalf2Pct: scoredData.awayPct,
     homeConcededHalf2Pct: concededData.homePct,
-    awayConcededHalf2Pct: concededData.awayPct
+    awayConcededHalf2Pct: concededData.awayPct,
   };
 };
