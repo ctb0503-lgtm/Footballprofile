@@ -1,5 +1,8 @@
 import { PPGChartData, SegmentChartData } from "@/types";
 import { PpgChart, FiveMinSegmentChart } from "@/components/charts";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 
 interface RenderedProfileProps {
   markdownText: string;
@@ -10,8 +13,13 @@ interface RenderedProfileProps {
 const RenderedProfileContent = ({ markdown }: { markdown: string }) => {
   if (!markdown) return null;
   return (
-    <div className="prose prose-invert prose-sm max-w-none text-gray-300 whitespace-pre-wrap break-words">
-      {markdown}
+    <div className="prose prose-invert prose-sm max-w-none text-gray-300">
+      <ReactMarkdown 
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw]}
+      >
+        {markdown}
+      </ReactMarkdown>
     </div>
   );
 };
