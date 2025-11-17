@@ -30,7 +30,7 @@ export const FootballTrader = () => {
 
   // API calls
   const api = useAnalysisAPI(
-    (profile) => profile.setProfile(profile),
+    (prof) => profile.setProfile(prof),
     (answer) => profile.setFollowUpAnswer(answer.text),
     (learnings) => profile.setKeyLearnings(learnings.text),
     (charts) => profile.setKeyCharts(charts.text),
@@ -378,7 +378,7 @@ export const FootballTrader = () => {
 
                 {profile.activeTab === 'charts' && (
                   <TabContent isLoading={api.chartsLoading} error={api.chartsError} data={profile.keyCharts || !api.chartsLoading}>
-                    <div dangerouslySetInnerHTML={{ __html: profile.keyCharts }} />
+                    <div className="prose prose-invert prose-sm max-w-none text-gray-300">{profile.keyCharts}</div>
                   </TabContent>
                 )}
 
@@ -393,7 +393,7 @@ export const FootballTrader = () => {
                       <VolatilityCard teamName={profile.teamA || 'Home'} volatilityData={{ volatilityPercent: 0, meanScored: 0, stdDevScored: 0, scoredCV: 0, meanConceded: 0, stdDevConceded: 0, concededCV: 0 }} />
                       <VolatilityCard teamName={profile.teamB || 'Away'} volatilityData={{ volatilityPercent: 0, meanScored: 0, stdDevScored: 0, scoredCV: 0, meanConceded: 0, stdDevConceded: 0, concededCV: 0 }} />
                     </div>
-                    <div dangerouslySetInnerHTML={{ __html: profile.keyVisualisations }} />
+                    <div className="prose prose-invert prose-sm max-w-none text-gray-300">{profile.keyVisualisations}</div>
                   </TabContent>
                 )}
 
@@ -418,14 +418,14 @@ export const FootballTrader = () => {
                       {api.followUpLoading ? 'Thinking...' : 'Ask Analyst'}
                     </button>
                     <TabContent isLoading={api.followUpLoading} error={api.followUpError} data={profile.followUpAnswer}>
-                      <div dangerouslySetInnerHTML={{ __html: profile.followUpAnswer }} />
+                      <div className="prose prose-invert prose-sm max-w-none text-gray-300">{profile.followUpAnswer}</div>
                     </TabContent>
                   </div>
                 )}
 
                 {profile.activeTab === 'learnings' && (
                   <TabContent isLoading={api.learningsLoading} error={api.learningsError} data={profile.keyLearnings || !api.learningsLoading}>
-                    <div dangerouslySetInnerHTML={{ __html: profile.keyLearnings }} />
+                    <div className="prose prose-invert prose-sm max-w-none text-gray-300">{profile.keyLearnings}</div>
                   </TabContent>
                 )}
 
