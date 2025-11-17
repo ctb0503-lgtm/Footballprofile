@@ -519,27 +519,11 @@ export const FootballTrader = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <VolatilityCard
                         teamName={profile.teamA || "Home"}
-                        volatilityData={{
-                          volatilityPercent: 0,
-                          meanScored: 0,
-                          stdDevScored: 0,
-                          scoredCV: 0,
-                          meanConceded: 0,
-                          stdDevConceded: 0,
-                          concededCV: 0,
-                        }}
+                        volatilityData={profile.homeVolatility}
                       />
                       <VolatilityCard
                         teamName={profile.teamB || "Away"}
-                        volatilityData={{
-                          volatilityPercent: 0,
-                          meanScored: 0,
-                          stdDevScored: 0,
-                          scoredCV: 0,
-                          meanConceded: 0,
-                          stdDevConceded: 0,
-                          concededCV: 0,
-                        }}
+                        volatilityData={profile.awayVolatility}
                       />
                     </div>
                     <div className="prose prose-invert prose-sm max-w-none text-gray-300">
