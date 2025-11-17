@@ -2,6 +2,7 @@ import { useEffect, useCallback, useState } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { useFirebase } from "@/hooks/useFirebase";
 import { useAnalysisAPI } from "@/hooks/useAnalysisAPI";
+import { useAutosave } from "@/hooks/useAutosave";
 import {
   SYSTEM_PROMPT,
   FOLLOW_UP_SYSTEM_PROMPT,
@@ -13,7 +14,6 @@ import {
 // Icons
 import {
   FootballIcon,
-  LoadingIcon,
   ErrorIcon,
   SaveIcon,
   LoadIcon,
@@ -22,6 +22,7 @@ import {
 
 // Form components
 import { StatsTextarea } from "@/components/forms/StatsTextarea";
+import { ApiKeyInput } from "@/components/forms/ApiKeyInput";
 
 // Tab components
 import { TabButton } from "@/components/tabs/TabButton";
@@ -31,8 +32,9 @@ import { TabContent } from "@/components/tabs/TabContent";
 import { RenderedProfile } from "@/components/analysis/RenderedProfile";
 import { LeagueStyleQuadrantChart } from "@/components/charts";
 import { VolatilityCard } from "@/components/cards/VolatilityCard";
+import { LoadingProgress } from "@/components/LoadingProgress";
 
-const APP_ID = "default-app-id"; // Should be from env
+const APP_ID = "default-app-id";
 
 export const FootballTrader = () => {
   // Profile management
@@ -53,6 +55,28 @@ export const FootballTrader = () => {
   // Loading states
   const [isSaving, setIsSaving] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const [loadingStage, setLoadingStage] = useState<"analyzing" | "searching" | "generating">("analyzing");
+
+  // Autosave user inputs
+  useAutosave(
+    {
+      teamA: profile.teamA,
+      teamB: profile.teamB,
+      ppgBlock: profile.ppgBlock,
+      indexBlock: profile.indexBlock,
+      homeFiveMinSegmentBlock: profile.homeFiveMinSegmentBlock,
+      awayFiveMinSegmentBlock: profile.awayFiveMinSegmentBlock,
+      halfDataScoredBlock: profile.halfDataScoredBlock,
+      halfDataConcededBlock: profile.halfDataConcededBlock,
+      overallStats: profile.overallStats,
+      atVenueStats: profile.atVenueStats,
+      leagueTable: profile.leagueTable,
+      homeRawResults: profile.homeRawResults,
+      awayRawResults: profile.awayRawResults,
+    },
+    'football-trader-draft',
+    1000
+  );
 
   // Lazy-load tabs
   useEffect(() => {
@@ -67,7 +91,7 @@ export const FootballTrader = () => {
         profile.profile.text,
         rawData,
         KEY_CHARTS_SYSTEM_PROMPT,
-        getApiKey(),
+        profile.apiKey,
       );
     }
   }, [profile.activeTab, profile.profile.text]);
@@ -83,7 +107,7 @@ export const FootballTrader = () => {
         profile.profile.text,
         constructRawData(),
         KEY_LEARNINGS_SYSTEM_PROMPT,
-        getApiKey(),
+        profile.apiKey,
       );
     }
   }, [profile.activeTab, profile.profile.text]);
@@ -99,7 +123,7 @@ export const FootballTrader = () => {
         profile.profile.text,
         constructRawData(),
         KEY_VISUALISATIONS_SYSTEM_PROMPT,
-        getApiKey(),
+        profile.apiKey,
       );
     }
   }, [profile.activeTab, profile.profile.text]);
@@ -111,9 +135,18 @@ export const FootballTrader = () => {
     }
   }, [profile.activeTab, firebase.isAuthenticated]);
 
-  const getApiKey = () => {
-    return (window as any).__gemini_api_key || "";
-  };
+  // Simulate loading stages
+  useEffect(() => {
+    if (api.profileLoading) {
+      setLoadingStage("analyzing");
+      const timer1 = setTimeout(() => setLoadingStage("searching"), 2000);
+      const timer2 = setTimeout(() => setLoadingStage("generating"), 10000);
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+      };
+    }
+  }, [api.profileLoading]);
 
   const constructRawData = () => {
     return `
@@ -126,8 +159,37 @@ export const FootballTrader = () => {
     `;
   };
 
+  // Input validation
+  const validateInputs = () => {
+    const errors = [];
+    
+    if (!profile.teamA || !profile.teamB) {
+      errors.push('Both team names are required');
+    }
+    
+    if (!profile.ppgBlock || !profile.indexBlock) {
+      errors.push('PPG and Index blocks are required');
+    }
+    
+    if (!profile.apiKey) {
+      errors.push('API key is required');
+    }
+    
+    if (errors.length > 0) {
+      setGeneralError(errors.join('; '));
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleGenerateProfile = async () => {
     setGeneralError(null);
+    
+    if (!validateInputs()) {
+      return;
+    }
+    
     profile.resetProfile();
 
     try {
@@ -147,7 +209,7 @@ export const FootballTrader = () => {
       Away Raw Results: ${profile.awayRawResults || "N/A"}
       `;
 
-      await api.generateProfile(userQuery, SYSTEM_PROMPT, getApiKey());
+      await api.generateProfile(userQuery, SYSTEM_PROMPT, profile.apiKey);
       profile.updateChartData();
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
@@ -167,7 +229,6 @@ export const FootballTrader = () => {
         profile.profile.sources,
         profile.getInputs(),
       );
-      // Success feedback could go here
     } catch (error) {
       setGeneralError("Failed to save profile");
     } finally {
@@ -196,6 +257,11 @@ export const FootballTrader = () => {
           </h1>
         </header>
 
+        {/* API Key Input */}
+        <div className="bg-gray-900 p-5 rounded-lg shadow-lg border border-gray-800">
+          <ApiKeyInput value={profile.apiKey} onChange={profile.saveApiKey} />
+        </div>
+
         {/* Inputs Section */}
         <div className="bg-gray-900 p-5 rounded-lg shadow-lg border border-gray-800">
           <h2 className="text-xl font-semibold mb-4 text-white border-b border-gray-700 pb-2">
@@ -205,7 +271,7 @@ export const FootballTrader = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">
-                Home Team
+                Home Team *
               </label>
               <input
                 type="text"
@@ -213,11 +279,12 @@ export const FootballTrader = () => {
                 onChange={(e) => profile.setTeamA(e.target.value)}
                 placeholder="e.g., Man City"
                 className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:ring-2 focus:ring-green-500"
+                aria-label="Home team name"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">
-                Away Team
+                Away Team *
               </label>
               <input
                 type="text"
@@ -225,6 +292,7 @@ export const FootballTrader = () => {
                 onChange={(e) => profile.setTeamB(e.target.value)}
                 placeholder="e.g., Liverpool"
                 className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:ring-2 focus:ring-green-500"
+                aria-label="Away team name"
               />
             </div>
           </div>
@@ -232,14 +300,14 @@ export const FootballTrader = () => {
           {/* Data input fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <StatsTextarea
-              label="PPG & GoalSense Block"
+              label="PPG & GoalSense Block *"
               value={profile.ppgBlock}
               onChange={profile.setPpgBlock}
               placeholder="Paste PPG block here..."
               rows={6}
             />
             <StatsTextarea
-              label="Index & Edge Block"
+              label="Index & Edge Block *"
               value={profile.indexBlock}
               onChange={profile.setIndexBlock}
               placeholder="Paste Index block here..."
@@ -322,16 +390,11 @@ export const FootballTrader = () => {
           <button
             onClick={handleGenerateProfile}
             disabled={api.profileLoading}
+            aria-label="Generate football trading profile"
+            aria-busy={api.profileLoading}
             className="w-full flex items-center justify-center p-3 bg-green-600 text-white font-bold rounded-md hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors"
           >
-            {api.profileLoading ? (
-              <>
-                <LoadingIcon />
-                Generating...
-              </>
-            ) : (
-              "Generate Profile"
-            )}
+            {api.profileLoading ? "Generating..." : "Generate Profile"}
           </button>
         </div>
 
@@ -341,12 +404,9 @@ export const FootballTrader = () => {
             Analytical Profile
           </h2>
 
-          {/* Loading state */}
+          {/* Loading state with progress */}
           {api.profileLoading && (
-            <div className="flex items-center justify-center p-6 bg-gray-800 rounded-md">
-              <LoadingIcon />
-              <span className="ml-2 text-gray-300">Generating profile...</span>
-            </div>
+            <LoadingProgress stage={loadingStage} />
           )}
 
           {/* Error state */}
@@ -375,8 +435,7 @@ export const FootballTrader = () => {
               >
                 {isSaving ? (
                   <>
-                    <LoadingIcon />
-                    Saving...
+                    <span className="mr-2">Saving...</span>
                   </>
                 ) : (
                   <>
@@ -505,14 +564,13 @@ export const FootballTrader = () => {
                           profile.followUpQuestion,
                           profile.profile.text + "\n\n" + rawData,
                           FOLLOW_UP_SYSTEM_PROMPT,
-                          getApiKey(),
+                          profile.apiKey,
                         );
                       }}
                       disabled={api.followUpLoading}
                       className="w-full flex items-center justify-center p-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 disabled:bg-gray-500"
                     >
-                      {api.followUpLoading ? <LoadingIcon /> : "💬"}
-                      {api.followUpLoading ? "Thinking..." : "Ask Analyst"}
+                      {api.followUpLoading ? "💬 Thinking..." : "💬 Ask Analyst"}
                     </button>
                     <TabContent
                       isLoading={api.followUpLoading}
@@ -602,7 +660,7 @@ export const FootballTrader = () => {
             !api.profileLoading &&
             !api.profileError && (
               <div className="text-center text-gray-500 p-6">
-                Enter team names and paste data to generate a profile.
+                Enter team names, API key, and paste data to generate a profile.
               </div>
             )}
         </div>
