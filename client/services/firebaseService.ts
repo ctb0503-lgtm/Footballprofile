@@ -22,14 +22,27 @@ import {
   Firestore,
   Unsubscribe
 } from 'firebase/firestore';
-import { SavedProfile, ProfileInputs, Profile } from '@/types';
-import { FIREBASE_CONFIG_PLACEHOLDER } from '@/utils/constants';
+import { SavedProfile, ProfileInputs } from '@/types';
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
+let isInitialized = false;
+
+const FIREBASE_CONFIG_PLACEHOLDER = {
+  apiKey: "AIzaSyDemo",
+  authDomain: "demo.firebaseapp.com",
+  projectId: "demo-project",
+  storageBucket: "demo-project.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abcdef"
+};
 
 export const initializeFirebase = () => {
+  if (isInitialized) {
+    return { auth, db };
+  }
+
   try {
     const firebaseConfig = typeof (window as any).__firebase_config !== 'undefined'
       ? JSON.parse((window as any).__firebase_config)
@@ -39,10 +52,12 @@ export const initializeFirebase = () => {
     auth = getAuth(app);
     db = getFirestore(app);
     setLogLevel('debug');
+    isInitialized = true;
 
     return { auth, db };
   } catch (e) {
     console.error("Error initializing Firebase:", e);
+    isInitialized = false;
     return { auth: null, db: null };
   }
 };
@@ -59,9 +74,14 @@ export const setupAuthStateListener = (
 ): Unsubscribe | null => {
   if (!auth) return null;
 
-  return onAuthStateChanged(auth, (user) => {
-    callback(user);
-  });
+  try {
+    return onAuthStateChanged(auth, (user) => {
+      callback(user);
+    });
+  } catch (error) {
+    console.error("Error setting up auth listener:", error);
+    return null;
+  }
 };
 
 export const signInUser = async (token?: string) => {
