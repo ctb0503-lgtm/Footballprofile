@@ -15,6 +15,10 @@ import {
 } from "recharts";
 import { PPGChartData, SegmentChartData } from "@/types";
 
+// --- Export the new heatmap component ---
+export { GoalHeatmap } from "./GoalHeatmap";
+// ----------------------------------------
+
 interface PpgChartProps {
   data: PPGChartData[];
 }

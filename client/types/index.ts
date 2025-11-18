@@ -46,8 +46,12 @@ export interface SegmentChartData {
   segment: string;
   "Home Scored": number;
   "Home Conceded": number;
+  "Home Scored Overall": number;
+  "Home Conceded Overall": number;
   "Away Scored": number;
   "Away Conceded": number;
+  "Away Scored Overall": number;
+  "Away Conceded Overall": number;
 }
 
 export interface FormTrendChartData {
@@ -107,6 +111,17 @@ export interface VolatilityStats {
   concededCV: number;
 }
 
+// Strategy types (NEW)
+export interface TradingStrategy {
+  id: string;
+  title: string;
+  type: "pre-match" | "in-play" | "avoid";
+  triggerCondition: string;
+  action: string;
+  confidence: "High" | "Medium" | "Low";
+  reasoning: string;
+}
+
 // Parsing result types
 export interface PPGParseResult {
   chartData: PPGChartData[];
@@ -159,6 +174,12 @@ export interface HalfDataStats {
   awayScoredHalf2Pct: number;
   homeConcededHalf2Pct: number;
   awayConcededHalf2Pct: number;
+  // Scored Verification
+  homeScored1stHalfOvers: number;
+  homeScored1stHalfPct: number;
+  // Conceded Verification
+  homeConceded1stHalfOvers: number;
+  homeConceded1stHalfPct: number;
 }
 
 export interface PPGFlagsData {
@@ -177,6 +198,10 @@ export interface VenueFlagsData {
   awayFTC: number;
   homeFHG: number;
   awayFHG: number;
+  homeSHG: number;
+  awaySHG: number;
+  homeConcedingRate: number;
+  awayConcedingRate: number;
   homeCleanSheet: number;
   awayCleanSheet: number;
   homeScoringRate: number;

@@ -3,6 +3,7 @@ import {
   generateAnalysisProfile,
   askAnalystFollowUp,
   generateKeyContent,
+  generateTeamNews,
 } from "@/services/apiService";
 import { Profile } from "@/types";
 
@@ -55,6 +56,17 @@ interface UseAnalysisAPIReturn {
   ) => Promise<void>;
   visualisationsLoading: boolean;
   visualisationsError: string | null;
+
+  // --- UPDATED RETURN TYPE ---
+  generateTeamNews: (
+    teamA: string,
+    teamB: string,
+    systemPrompt: string,
+    apiKey: string,
+  ) => Promise<Profile>; // <-- Changed from void to Profile
+  teamNewsLoading: boolean;
+  teamNewsError: string | null;
+  // -------------------------------
 }
 
 export const useAnalysisAPI = (
@@ -63,6 +75,7 @@ export const useAnalysisAPI = (
   onLearningsGenerated: (learnings: Profile) => void,
   onChartsGenerated: (charts: Profile) => void,
   onVisualisationsGenerated: (visualisations: Profile) => void,
+  onTeamNewsGenerated: (news: Profile) => void,
 ): UseAnalysisAPIReturn => {
   // Main profile
   const [profileLoading, setProfileLoading] = useState(false);
@@ -86,6 +99,10 @@ export const useAnalysisAPI = (
     null,
   );
 
+  // Team News
+  const [teamNewsLoading, setTeamNewsLoading] = useState(false);
+  const [teamNewsError, setTeamNewsError] = useState<string | null>(null);
+
   // Generate profile
   const generateProfile = useCallback(
     async (userQuery: string, systemPrompt: string, apiKey: string) => {
@@ -103,6 +120,7 @@ export const useAnalysisAPI = (
         const errorMessage =
           error instanceof Error ? error.message : String(error);
         setProfileError(errorMessage);
+        throw error; // <-- Re-throw error to be caught by caller
       } finally {
         setProfileLoading(false);
       }
@@ -230,6 +248,39 @@ export const useAnalysisAPI = (
     [onVisualisationsGenerated],
   );
 
+  // --- UPDATED FUNCTION ---
+  const generateNews = useCallback(
+    async (
+      teamA: string,
+      teamB: string,
+      systemPrompt: string,
+      apiKey: string,
+    ): Promise<Profile> => { // <-- Add return type
+      setTeamNewsLoading(true);
+      setTeamNewsError(null);
+
+      try {
+        const news = await generateTeamNews(
+          teamA,
+          teamB,
+          systemPrompt,
+          apiKey,
+        );
+        onTeamNewsGenerated(news); // Still update the state
+        return news; // <-- RETURN the news
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        setTeamNewsError(errorMessage);
+        throw error; // <-- Re-throw error
+      } finally {
+        setTeamNewsLoading(false);
+      }
+    },
+    [onTeamNewsGenerated],
+  );
+  // ------------------------
+
   return {
     generateProfile,
     profileLoading,
@@ -246,5 +297,8 @@ export const useAnalysisAPI = (
     generateVisualisations,
     visualisationsLoading,
     visualisationsError,
+    generateTeamNews: generateNews,
+    teamNewsLoading,
+    teamNewsError,
   };
 };

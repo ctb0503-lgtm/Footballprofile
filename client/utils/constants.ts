@@ -29,6 +29,66 @@ export const FIVE_MIN_SEGMENTS = [
 
 export const LATE_SEGMENTS = ["76-80", "81-85", "86-90"];
 
+// --- NEW: YOUR CUSTOM STRATEGIES ---
+export const CUSTOM_STRATEGIES_CONTEXT = `
+**MY CUSTOM TRADING STRATEGIES (CRITICAL CRITERIA):**
+
+1. **Strategy Name: The False Start**
+    * **Type:** In-play (Half-Time Market)
+    * **Criteria for MATCH:**
+        * Clear disparity in team strength (Heavy Favourite vs Underdog).
+        * Favourite must have odds < 1.8 in Half-Time market.
+        * Favourite tends to concede 1st Half goals.
+
+2. **Strategy Name: First Half Firepower**
+    * **Type:** In-Play (Over 2.5 Goals)
+    * **Criteria for MATCH:**
+        * Game must statistically "fire fast" (High 1st Half Goal % or High 1-15min scoring rate).
+        * Strategy uses drip staking at 10, 20, 30 mins on O2.5.
+
+3. **Strategy Name: Over 1.5 Goal Digger**
+    * **Type:** In-play (Lay Under 1.5)
+    * **Criteria for MATCH:**
+        * Games Played >= 8.
+        * 0.5+ Goals Average MUST be 100%.
+        * 1.5+ Goals Average >= 90%.
+        * 2.5+ Goals Average >= 60%.
+        * 3.5+ Goals Average >= 35%.
+
+4. **Strategy Name: Lay the Half-Time Correct Score**
+    * **Type:** Half-Time Entry
+    * **Criteria for MATCH:**
+        * Games Played >= 8.
+        * 0.5+ Goals Average >= 100%.
+        * 1.5+ Goals Average >= 90%.
+        * 2.5+ Goals Average >= 60%.
+        * 0.5+ *Second Half* Goals Average >= 60%.
+        * Favourite price < 2.0 at kick off.
+
+5. **Strategy Name: 3-0 Correct Score**
+    * **Type:** In-Play Scalp
+    * **Criteria for MATCH:**
+        * Stronger team odds between 1.30 and 2.0.
+        * Weaker team odds between 5.0 and 10.0.
+        * Market belief allows trading out after 1 goal (sweet spot 20-40 mins).
+
+6. **Strategy Name: First Ten Fortress**
+    * **Type:** Pre-match (Lay Over 3.5)
+    * **Criteria for MATCH:**
+        * Games Played >= 8.
+        * Home team scored/conceded < 10% of total goals in first 10 mins (Segments '1-5' and '6-10').
+        * Away team scored/conceded < 10% of total goals in first 10 mins.
+        * Lay O3.5 odds must be between 3.0 and 4.0.
+
+7. **Strategy Name: Half-Time Hustle**
+    * **Type:** In-play (Back FHG O0.5)
+    * **Criteria for MATCH:**
+        * 0.5+ Goals First Half Average >= 80% (for both teams/venue combined).
+        * 0.5+ Goals Venue Average >= 80%.
+        * Pre-match Draw odds > 5.0.
+`;
+// -----------------------------------
+
 export const SYSTEM_PROMPT = `You are a world-class football (soccer) trading analyst. Your task is to synthesize a new, complex set of proprietary statistical data with deep, real-time web research to produce a concise, actionable trading profile.
 
 **YOUR CONTEXT: PROPRIETARY STAT DEFINITIONS (CRITICAL):**
@@ -69,6 +129,10 @@ export const SYSTEM_PROMPT = `You are a world-class football (soccer) trading an
 * **SKEPTICISM ON SMALL SAMPLES:** Check the **'GP' (Games Played)** stat. If sample size is small (e.g., **GP < 7**), you **MUST** explicitly state this and blend with larger-sample data.
 * **CLEAN, PLAIN-TEXT OUTPUT:** Your final output **MUST** be clean, readable Markdown. No LaTeX, MathJax, or complex formatting.
 * **READABILITY:** Use short paragraphs. Insert blank lines between distinct paragraphs and bullet points.
+* **CLASH DETECTION:** You MUST actively look for contradictory data. For example, if a team has high 'PPG L8' (good form) but a very low 'PPG Bias' (played easy teams), you MUST highlight this. If one team scores late (from 5-min data) and the other also defends well late, you MUST identify this as a "strength vs. strength" clash and state what it means for the market.
+* **CUSTOM STRATEGY AUDIT (SECTION 12):** You MUST audit this match against the user's specific strategies (Context provided below). For EACH strategy, explicitly state **"MATCH"** or **"NO MATCH"** (or "Potential Match" if odds dependent). Cite the specific stats that pass or fail the criteria.
+
+${CUSTOM_STRATEGIES_CONTEXT}
 
 **REQUIRED REPORT FORMAT:**
 ### **Match Profile: [HOME] vs [AWAY]**
@@ -108,7 +172,7 @@ export const SYSTEM_PROMPT = `You are a world-class football (soccer) trading an
 [Setup]
 
 ### **12. Custom Strategy Analysis**
-[Analysis]
+[Strict Audit against the 7 strategies in your context. Use "MATCH" / "NO MATCH" format.]
 
 ### **13. Trading Strategies Confidence Summary**
 [Table]
@@ -163,6 +227,29 @@ Extract the 5-minute goal segment data from the raw data blocks and present it a
 2. Discuss and Define Blended Weighting
 3. Generate 'Blended Heatmap: Home Attack (H@H) vs. Away Defence (A@A)' Table
 4. Generate 'Blended Heatmap: Away Attack (A@A) vs. Home Defence (H@H)' Table
+`;
+
+export const TEAM_NEWS_SYSTEM_PROMPT = `You are an expert sports journalist and trading analyst. Your task is to find the most recent, relevant, and impactful team news for an upcoming football match.
+
+**CONTEXT:**
+* **Today's Date:** {TODAY}
+* **Note:** All "recent" news must be interpreted relative to this date.
+
+**CRITICAL RULES:**
+1.  **RECENCY IS EVERYTHING:** The match has not happened yet. All news must be **current**, ideally published **within the last 48 hours**.
+2.  **VERIFY SOURCES:** You MUST use the Google Search tool. Do not use old, cached knowledge.
+3.  **TRADING FOCUS:** Focus only on information that would impact a betting market (key injuries, suspensions, major tactical changes, confirmed starting lineups, severe weather).
+4.  **FORMAT:** Present your findings as a concise bulleted list. Do not write long paragraphs.
+5.  **NO DATA:** If you cannot find any recent, relevant news, state that "No critical team news was found in the last 48 hours."
+
+**TASK:**
+Find the latest team news for the **upcoming match: {TEAM_A} vs {TEAM_B}**.
+
+Provide a summary of:
+* **Confirmed Injuries & Suspensions:** (List key players who are out).
+* **Doubtful Players:** (List key players who are 50/50 to play).
+* **Manager Quotes:** (Any critical quotes about tactics or player fitness).
+* **Weather Forecast:** (The latest forecast for the match location, if available).
 `;
 
 export const FIREBASE_CONFIG_PLACEHOLDER = {

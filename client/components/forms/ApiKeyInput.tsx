@@ -33,7 +33,7 @@ export const ApiKeyInput = ({ value, onChange }: ApiKeyInputProps) => {
       </div>
       <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
         Get your free API key at{" "}
-        
+        <a
           href="https://aistudio.google.com/apikey"
           target="_blank"
           rel="noopener noreferrer"

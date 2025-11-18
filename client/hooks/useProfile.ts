@@ -1,12 +1,18 @@
-// client/hooks/useProfile.ts
-
 import { useState, useCallback, useEffect, useMemo } from "react";
 import {
   Profile,
   ProfileInputs,
   PPGChartData,
   SegmentChartData,
-  VolatilityStats, // <--- ADDED
+  VolatilityStats,
+  // --- ADDED TYPES ---
+  PPGFlagsData,
+  VenueFlagsData,
+  IndexFlagsData,
+  FiveMinParseResult, // Re-using this
+  ResilienceStats,
+  HalfDataStats,
+  // -------------------
 } from "@/types";
 import {
   parsePpgBlock,
@@ -14,9 +20,17 @@ import {
   parseNewFiveMinSegmentData,
   parseHalfDataBlock,
   parseLeagueTable,
-  parseVolatilityData, // <--- ADDED
+  parseVolatilityData,
+  // --- ADDED PARSERS ---
+  parsePpgForFlags,
+  parseVenueForFlags,
+  parseIndexForFlags,
+  parse5MinForFlags,
+  parseResilienceForFlags,
+  parseHalfDataForFlags,
+  // ---------------------
 } from "@/services/parsingService";
-import { VOLATILITY_DEFAULT_STATE } from "@/utils/constants"; // <--- ADDED
+import { VOLATILITY_DEFAULT_STATE } from "@/utils/constants";
 
 // --- Helper to load draft state (Inferred from useAutosave in FootballTrader.tsx) ---
 const loadDraft = (key: string, field: string, defaultValue: string = "") => {
@@ -87,22 +101,45 @@ export const useProfile = () => {
   // --- DERIVED CHART DATA (For use in the report and other tabs) ---
   const [ppgChartData, setPpgChartData] = useState<PPGChartData[]>([]);
   const [fiveMinSegmentChartData, setFiveMinSegmentChartData] = useState<SegmentChartData[]>([]);
-  
-  // --- NEW VOLATILITY CALCULATION LOGIC ---
+
+  // --- VOLATILITY CALCULATION LOGIC ---
   const homeVolatility = useMemo<VolatilityStats>(() => {
     if (teamA && homeRawResults) {
-      return parseVolatilityData(homeRawResults, teamA, "home");
+      return parseVolatilityData(homeRawResults, teamA);
     }
     return VOLATILITY_DEFAULT_STATE;
   }, [teamA, homeRawResults]);
 
   const awayVolatility = useMemo<VolatilityStats>(() => {
     if (teamB && awayRawResults) {
-      return parseVolatilityData(awayRawResults, teamB, "away");
+      return parseVolatilityData(awayRawResults, teamB);
     }
     return VOLATILITY_DEFAULT_STATE;
   }, [teamB, awayRawResults]);
   // -----------------------------------------------------
+
+  // --- NEW: PARSED DATA FOR ANALYTICAL FLAGS ---
+  const analyticalFlagData = useMemo(() => {
+    try {
+      return {
+        ppg: parsePpgForFlags(ppgBlock),
+        venue: parseVenueForFlags(atVenueStats),
+        index: parseIndexForFlags(indexBlock),
+        fiveMin: parse5MinForFlags(homeFiveMinSegmentBlock, awayFiveMinSegmentBlock),
+        resilience: parseResilienceForFlags(homeRawResults, awayRawResults, teamA, teamB),
+        half: parseHalfDataForFlags(halfDataScoredBlock, halfDataConcededBlock),
+      };
+    } catch (error) {
+      console.error("Error parsing flag data:", error);
+      return null;
+    }
+  }, [
+    ppgBlock, atVenueStats, indexBlock,
+    homeFiveMinSegmentBlock, awayFiveMinSegmentBlock,
+    homeRawResults, awayRawResults, teamA, teamB,
+    halfDataScoredBlock, halfDataConcededBlock
+  ]);
+  // -------------------------------------------------
 
   // --- UTILITY FUNCTIONS (Stubs for full hook functionality) ---
   const resetProfile = useCallback(() => {
@@ -124,7 +161,7 @@ export const useProfile = () => {
     const segmentResult = parseNewFiveMinSegmentData(homeFiveMinSegmentBlock, awayFiveMinSegmentBlock);
     setFiveMinSegmentChartData(segmentResult.chartData);
   }, [ppgBlock, teamA, teamB, homeFiveMinSegmentBlock, awayFiveMinSegmentBlock]);
-  
+
   const getInputs = useCallback((): ProfileInputs => {
     return {
       ppgBlock, indexBlock, homeFiveMinSegmentBlock, awayFiveMinSegmentBlock,
@@ -136,7 +173,7 @@ export const useProfile = () => {
     halfDataScoredBlock, halfDataConcededBlock, overallStats, atVenueStats,
     leagueTable, homeRawResults, awayRawResults,
   ]);
-  
+
   const loadProfile = useCallback((
     newTeamA: string, newTeamB: string, newProfileText: string, newSources: any[], newInputs: ProfileInputs,
   ) => {
@@ -156,7 +193,7 @@ export const useProfile = () => {
     setHomeRawResults(newInputs.homeRawResults);
     setAwayRawResults(newInputs.awayRawResults);
   }, []);
-  
+
   const getParsedData = useCallback(() => {
     return {
         ppg: parsePpgBlock(ppgBlock, teamA, teamB),
@@ -172,7 +209,7 @@ export const useProfile = () => {
     // API Key management (EXISTING SNIPPET)
     apiKey,
     saveApiKey,
-    
+
     // Inputs (for binding to UI and persistence)
     teamA, setTeamA,
     teamB, setTeamB,
@@ -193,8 +230,9 @@ export const useProfile = () => {
     profile, setProfile,
     ppgChartData,
     fiveMinSegmentChartData,
-    homeVolatility, // <--- NEW EXPORT
-    awayVolatility, // <--- NEW EXPORT
+    homeVolatility,
+    awayVolatility,
+    analyticalFlagData, // <--- NEW EXPORT
     followUpAnswer, setFollowUpAnswer,
     keyLearnings, setKeyLearnings,
     keyCharts, setKeyCharts,
