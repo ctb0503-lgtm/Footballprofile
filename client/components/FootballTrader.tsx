@@ -32,6 +32,7 @@ import { TabContent } from "@/components/tabs/TabContent";
 import { RenderedProfile } from "@/components/analysis/RenderedProfile";
 import { LeagueStyleQuadrantChart } from "@/components/charts";
 import { VolatilityCard } from "@/components/cards/VolatilityCard";
+import { StrategyCard } from "@/components/cards/StrategyCard";
 import { LoadingProgress } from "@/components/LoadingProgress";
 
 const APP_ID = "default-app-id";
@@ -526,6 +527,20 @@ export const FootballTrader = () => {
                         volatilityData={profile.awayVolatility}
                       />
                     </div>
+
+                    {profile.strategyCards.length > 0 && (
+                      <div className="mt-6">
+                        <h3 className="text-lg font-semibold mb-4 text-white">
+                          Trading Strategies
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {profile.strategyCards.map((strategy) => (
+                            <StrategyCard key={strategy.id} strategy={strategy} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="prose prose-invert prose-sm max-w-none text-gray-300">
                       {profile.keyVisualisations}
                     </div>

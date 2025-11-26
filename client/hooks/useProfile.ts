@@ -7,6 +7,7 @@ import {
   PPGChartData,
   SegmentChartData,
   VolatilityStats, // <--- ADDED
+  StrategyCard,
 } from "@/types";
 import {
   parsePpgBlock,
@@ -15,6 +16,7 @@ import {
   parseHalfDataBlock,
   parseLeagueTable,
   parseVolatilityData, // <--- ADDED
+  parseStrategiesFromReport,
 } from "@/services/parsingService";
 import { VOLATILITY_DEFAULT_STATE } from "@/utils/constants"; // <--- ADDED
 
@@ -102,6 +104,14 @@ export const useProfile = () => {
     }
     return VOLATILITY_DEFAULT_STATE;
   }, [teamB, awayRawResults]);
+
+  // --- STRATEGY CARDS PARSING ---
+  const strategyCards = useMemo<StrategyCard[]>(() => {
+    if (profile.text) {
+      return parseStrategiesFromReport(profile.text);
+    }
+    return [];
+  }, [profile.text]);
   // -----------------------------------------------------
 
   // --- UTILITY FUNCTIONS (Stubs for full hook functionality) ---
@@ -195,6 +205,7 @@ export const useProfile = () => {
     fiveMinSegmentChartData,
     homeVolatility, // <--- NEW EXPORT
     awayVolatility, // <--- NEW EXPORT
+    strategyCards, // <--- NEW EXPORT
     followUpAnswer, setFollowUpAnswer,
     keyLearnings, setKeyLearnings,
     keyCharts, setKeyCharts,

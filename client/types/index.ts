@@ -107,6 +107,15 @@ export interface VolatilityStats {
   concededCV: number;
 }
 
+// Strategy card types
+export interface StrategyCard {
+  id: string;
+  name: string;
+  confidence: number; // 0-100
+  confidenceLabel: "High" | "Medium" | "Low";
+  description?: string;
+}
+
 // Parsing result types
 export interface PPGParseResult {
   chartData: PPGChartData[];

@@ -9,6 +9,7 @@ import {
   PPGFlagsData,
   VenueFlagsData,
   IndexFlagsData,
+  StrategyCard,
 } from "@/types";
 import { FIVE_MIN_SEGMENTS, LATE_SEGMENTS } from "@/utils/constants";
 
@@ -705,4 +706,58 @@ export const parseHalfDataForFlags = (
     homeConcededHalf2Pct: concededData.homePct,
     awayConcededHalf2Pct: concededData.awayPct,
   };
+};
+
+/**
+ * Parses trading strategies from section 13 of the report
+ * Looks for "Trading Strategies Confidence Summary" section
+ */
+export const parseStrategiesFromReport = (reportText: string): StrategyCard[] => {
+  if (!reportText) return [];
+
+  const strategies: StrategyCard[] = [];
+
+  // Find section 13: Trading Strategies Confidence Summary
+  const section13Regex = /###\s*\*?\*?13\.\s*Trading Strategies Confidence Summary\*?\*?([\s\S]*?)(?=###|$)/i;
+  const match = reportText.match(section13Regex);
+
+  if (!match || !match[1]) {
+    return [];
+  }
+
+  const sectionContent = match[1];
+  const lines = sectionContent.split("\n");
+
+  // Common strategy patterns to extract
+  const strategyPatterns = [
+    /\|\s*([^|]+?)\s*\|\s*(\d+)%?\s*\|\s*(High|Medium|Low)/i,
+    /\*\*([^*]+?)\*\*[:\s]+(\d+)%[,\s]+(High|Medium|Low)/i,
+    /^[-*]\s*([^:]+?):\s*(\d+)%[,\s]+(High|Medium|Low)/i,
+  ];
+
+  lines.forEach((line, idx) => {
+    for (const pattern of strategyPatterns) {
+      const match = line.match(pattern);
+      if (match) {
+        const name = match[1].trim();
+        const confidence = parseInt(match[2]);
+        const confidenceLabel = match[3] as "High" | "Medium" | "Low";
+
+        // Skip header rows
+        if (name.toLowerCase().includes("strategy") && name.toLowerCase().includes("confidence")) {
+          continue;
+        }
+
+        strategies.push({
+          id: `strategy-${idx}`,
+          name,
+          confidence,
+          confidenceLabel,
+        });
+        break;
+      }
+    }
+  });
+
+  return strategies;
 };
