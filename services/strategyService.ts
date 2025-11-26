@@ -7,7 +7,7 @@ import {
   StrategyCriteriaResult,
   SegmentChartData,
   OpponentQualityStats
-} from "@/types";
+} from "../types"; // Adjusted path
 
 const check = (label: string, value: number, threshold: number, operator: '>' | '<' | '>=' | '<=', displayVal?: string): StrategyCriteriaResult => {
   let passed = false;
@@ -55,9 +55,14 @@ export const evaluateStrategies = (
 
   const getConf = (passes: number, total: number): StrategyEvaluation['confidence'] => {
       const ratio = passes / total;
+      // High: 80% or more criteria passed
       if (ratio >= 0.8) return "High";
+      // Medium: 50% or more criteria passed
       if (ratio >= 0.5) return "Medium";
-      return "Avoid"; // Strict low confidence
+      // Low: Less than 50% criteria passed
+      if (ratio > 0) return "Low";
+      // Avoid: 0 criteria passed
+      return "Avoid";
   };
 
   // --- 1. BOTH TEAMS TO SCORE (BTTS) ---
@@ -104,13 +109,16 @@ export const evaluateStrategies = (
   let earlyGoals = 0;
   ["1-5", "6-10", "11-15"].forEach(seg => {
       const d = fiveMinData.find(item => item.segment.startsWith(seg));
-      if(d) earlyGoals += (d["Home Scored"] + d["Away Conceded"]); // Home perspective vs Away
+      // Use the max of Scored or Conceded for the home side, and max for away side
+      const homeActivity = d ? Math.max(d["Home Scored"], d["Home Conceded"]) : 0;
+      const awayActivity = d ? Math.max(d["Away Scored"], d["Away Conceded"]) : 0;
+      earlyGoals += (homeActivity + awayActivity);
   });
 
   fastCriteria.push(check("Home 1H Over 0.5 %", home1HOver, 75, '>=', `${home1HOver}%`));
   fastCriteria.push(check("Away 1H Over 0.5 %", away1HOver, 70, '>=', `${away1HOver}%`));
   fastCriteria.push(check("Home FTS %", venue.homeFTS, 65, '>=', `${venue.homeFTS}%`));
-  fastCriteria.push(check("Early Goal Activity (1-15m)", earlyGoals, 2, '>=', `${earlyGoals} goals`));
+  fastCriteria.push(check("Early Goal Activity (1-15m)", earlyGoals, 2, '>=', `${earlyGoals.toFixed(0)} events`));
 
   evaluations.push({
     id: "fast_start",
@@ -119,7 +127,7 @@ export const evaluateStrategies = (
     confidence: getConf(fastCriteria.filter(c => c.passed).length, 4),
     score: (fastCriteria.filter(c => c.passed).length / 4) * 100,
     criteria: fastCriteria,
-    reasoning: "Targeting early action based on FTS and segment data."
+    reasoning: "Targeting early action based on 1H goals and segment data."
   });
 
   // --- 4. LAY THE DRAW ---
@@ -164,9 +172,9 @@ export const evaluateStrategies = (
 
   // --- 6. THE GOAL DIGGER (Over 1.5 Goals) ---
   const o15Criteria: StrategyCriteriaResult[] = [];
-  const homeO15 = homeExt.matches.filter(m => (m.goalsFor + m.goalsAgainst) > 1.5).length;
+  const homeO15 = homeExt.matches.filter(m => (m.goalsFor + m.goalsAgainst) > 1).length; // Over 1.5 goals means >= 2 goals
   const homeO15Pct = homeExt.gamesFound > 0 ? (homeO15 / homeExt.gamesFound) * 100 : 75;
-  const awayO15 = awayExt.matches.filter(m => (m.goalsFor + m.goalsAgainst) > 1.5).length;
+  const awayO15 = awayExt.matches.filter(m => (m.goalsFor + m.goalsAgainst) > 1).length;
   const awayO15Pct = awayExt.gamesFound > 0 ? (awayO15 / awayExt.gamesFound) * 100 : 75;
   const combinedO15 = (homeO15Pct + awayO15Pct) / 2;
   const combinedFTS = (venue.homeFTS + venue.awayFTS) / 2;
@@ -200,6 +208,7 @@ export const evaluateStrategies = (
   let startActivity = 0;
   ["1-5", "6-10", "11-15"].forEach(seg => {
       const d = fiveMinData.find(item => item.segment.startsWith(seg));
+      // Sum all goals scored/conceded by both teams in the first 15 mins
       if(d) startActivity += (d["Home Scored"] + d["Home Conceded"] + d["Away Scored"] + d["Away Conceded"]);
   });
 
@@ -209,97 +218,4 @@ export const evaluateStrategies = (
 
   evaluations.push({
     id: "slow_burner",
-    name: "The Slow Burner (2H Goals)",
-    type: "In-Play",
-    confidence: getConf(slowCriteria.filter(c => c.passed).length, 3),
-    score: (slowCriteria.filter(c => c.passed).length / 3) * 100,
-    criteria: slowCriteria,
-    reasoning: "Teams score late and start slow. Look to enter market after 20 mins."
-  });
-
-  // --- 8. CLEAN SHEET KING (Win to Nil) ---
-  const csCriteria: StrategyCriteriaResult[] = [];
-  const favIsHome = venue.homePpg >= venue.awayPpg;
-
-  // Determine who is the "King" candidates
-  const kingCleanSheet = favIsHome ? venue.homeCleanSheet : venue.awayCleanSheet;
-  const peasantScoring = favIsHome ? venue.awayScoringRate : venue.homeScoringRate;
-  const peasantFTS = favIsHome ? venue.awayFTS : venue.homeFTS;
-
-  csCriteria.push(check("Favorite Clean Sheet %", kingCleanSheet, 40, '>=', `${kingCleanSheet}%`));
-  csCriteria.push(check("Underdog Scoring Rate", peasantScoring, 0.90, '<='));
-  csCriteria.push(check("Underdog FTS %", peasantFTS, 35, '>=', `${peasantFTS}%`));
-
-  evaluations.push({
-    id: "cs_king",
-    name: "Clean Sheet King (Win to Nil)",
-    type: "Match Winner",
-    confidence: getConf(csCriteria.filter(c => c.passed).length, 3),
-    score: (csCriteria.filter(c => c.passed).length / 3) * 100,
-    criteria: csCriteria,
-    reasoning: `Backing ${favIsHome ? 'Home' : 'Away'} to win to nil against a weak attack.`
-  });
-
-  // --- 9. LATE SHOW SCALP (Late Goals) ---
-  const lateCriteria: StrategyCriteriaResult[] = [];
-  let lateGoals = 0;
-  ["76-80", "81-85", "86-90"].forEach(seg => {
-      const d = fiveMinData.find(item => item.segment.startsWith(seg));
-      if(d) lateGoals += (d["Home Scored"] + d["Home Conceded"] + d["Away Scored"] + d["Away Conceded"]);
-  });
-
-  // 2H Overs Proxy
-  const home2HGoalsPct = halfData?.homeScoredHalf2Pct || 50; // Note: parsing naming might differ, verifying logic
-  // Actually parsing service returns goals2ndHalfPct as 'homeScoredHalf2Pct' for home.
-
-  lateCriteria.push(check("Combined 76-90m Goals", lateGoals, 4, '>=', `${lateGoals} goals`));
-  lateCriteria.push(check("Home 2H Goal Share", home2HGoalsPct, 55, '>=', `${home2HGoalsPct}%`));
-
-  evaluations.push({
-    id: "late_show",
-    name: "Late Show Scalp",
-    type: "In-Play",
-    confidence: getConf(lateCriteria.filter(c => c.passed).length, 2),
-    score: (lateCriteria.filter(c => c.passed).length / 2) * 100,
-    criteria: lateCriteria,
-    reasoning: "High activity in final 15 mins suggests late value."
-  });
-
-  // --- 10. ASIAN HANDICAP VALUE ---
-  const ahCriteria: StrategyCriteriaResult[] = [];
-
-  // PPG Bias is the key here (Performance vs Expectation)
-  // Parse PPG Bias from raw text is hard, we rely on flags parsed
-  // Assuming ppgBias is available in a param we missed?
-  // Ah, we don't have PPG Bias passed in directly in the function signature above easily
-  // BUT we parse it in parsingService. Let's assume we pass it in via 'venue' or we need to parse it.
-  // Actually, it's in `PPGParseResult` but we aren't passing that full object.
-  // However, we passed `halfData`.
-  // Let's use Opponent Quality as a proxy for "Value".
-
-  let strongVsSimilar = false;
-  if (quality) {
-     const homeWinRateVsSimilar = quality.homeVsSimilarAway.similarMatchCount > 0
-        ? quality.homeVsSimilarAway.W / quality.homeVsSimilarAway.similarMatchCount
-        : 0;
-     strongVsSimilar = homeWinRateVsSimilar > 0.60;
-
-     ahCriteria.push(check("Home Win % vs Similar Rank", homeWinRateVsSimilar * 100, 60, '>=', `${(homeWinRateVsSimilar*100).toFixed(0)}%`));
-  } else {
-      ahCriteria.push(check("Opponent Quality Data", 0, 1, '>=', "Missing"));
-  }
-
-  ahCriteria.push(check("Home PPG (Venue)", venue.homePpg, 1.8, '>'));
-
-  evaluations.push({
-    id: "ah_value",
-    name: "Asian Handicap Value",
-    type: "Value Play",
-    confidence: getConf(ahCriteria.filter(c => c.passed).length, 2),
-    score: (ahCriteria.filter(c => c.passed).length / 2) * 100,
-    criteria: ahCriteria,
-    reasoning: "Strong record against similar opposition suggests handicap value."
-  });
-
-  return evaluations.sort((a, b) => b.score - a.score);
-};
+    name

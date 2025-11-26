@@ -5,6 +5,7 @@ import { useAnalysisAPI } from "@/hooks/useAnalysisAPI";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useDailyPlan } from "@/hooks/useDailyPlan";
 import { extractStrategiesFromMarkdown, extractTradingAngles } from "@/services/parsingService";
+import { STRATEGY_BENCHMARKS } from "@/utils/strategyBenchmarks";
 
 import {
   SYSTEM_PROMPT,
@@ -25,7 +26,7 @@ import {
   TeamNewsIcon,
   LoadingIcon,
 } from "@/components/icons";
-import { ChevronDown, ChevronUp, Trash2, PlusCircle, CalendarCheck, CheckCircle, Target, TrendingUp, PenTool, Timer } from "lucide-react"; // Added PenTool
+import { ChevronDown, ChevronUp, Trash2, PlusCircle, CalendarCheck, CheckCircle, Target, TrendingUp, PenTool, Timer, BookOpen } from "lucide-react"; // Added BookOpen
 
 // Form components
 import { StatsTextarea } from "@/components/forms/StatsTextarea";
@@ -58,9 +59,10 @@ import { FormPulseChart } from "@/components/charts/FormPulseChart";
 import { KillZoneRadar } from "@/components/charts/KillZoneRadar";
 import { OpponentScatter } from "@/components/charts/OpponentScatter";
 import { TaleOfTheTape } from "@/components/cards/TaleOfTheTape";
-import { FastStartCard } from "@/components/cards/FastStartCard"; // NEW IMPORT
+import { FastStartCard } from "@/components/cards/FastStartCard";
 import { VolatilityCard } from "@/components/cards/VolatilityCard";
 import { MatchVolatilityCard } from "@/components/cards/MatchVolatilityCard";
+import { StrategyBenchmarkCard } from "@/components/cards/StrategyBenchmarkCard"; // NEW IMPORT
 import { LoadingProgress } from "@/components/LoadingProgress";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -81,10 +83,8 @@ export const FootballTrader = () => {
   const { toast } = useToast();
 
   const [teamNews, setTeamNews] = useState<Profile>({ text: "", sources: [] });
-  // NEW: Fast Start Context State
   const [fastStartContext, setFastStartContext] = useState<Profile>({ text: "", sources: [] });
 
-  // NEW: Manual Strategy State
   const [customStrategyTitle, setCustomStrategyTitle] = useState("");
   const [customStrategyReason, setCustomStrategyReason] = useState("");
 
@@ -103,7 +103,7 @@ export const FootballTrader = () => {
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [loadingStage, setLoadingStage] = useState<"analyzing" | "searching" | "generating">("analyzing");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isFastStartLoading, setIsFastStartLoading] = useState(false); // New loading state
+  const [isFastStartLoading, setIsFastStartLoading] = useState(false);
 
   // UI State
   const [isInputsOpen, setIsInputsOpen] = useState(true);
@@ -166,10 +166,9 @@ export const FootballTrader = () => {
 
   useEffect(() => {
     setTeamNews({ text: "", sources: [] });
-    setFastStartContext({ text: "", sources: [] }); // Reset fast start on team change
+    setFastStartContext({ text: "", sources: [] });
   }, [profile.teamA, profile.teamB]);
 
-  // UPDATED: Now includes ALL data fields so Follow-Up/Charts see everything
   const constructRawData = useCallback(() => {
     return `
     PPG Block: ${profile.ppgBlock || "N/A"}
@@ -192,12 +191,10 @@ export const FootballTrader = () => {
     profile.leagueTable, profile.homeRawResults, profile.awayRawResults
   ]);
 
-  // EXTRACT STRATEGIES ON RENDER
   const matchedStrategies = useMemo(() => {
       return extractStrategiesFromMarkdown(profile.profile.text);
   }, [profile.profile.text]);
 
-  // EXTRACT AI TRADING ANGLES ON RENDER
   const aiTradingAngles = useMemo(() => {
       return extractTradingAngles(profile.profile.text);
   }, [profile.profile.text]);
@@ -242,7 +239,6 @@ export const FootballTrader = () => {
     setIsClearConfirmOpen(true);
   };
 
-  // Input validation
   const validateInputs = () => {
     const errors = [];
 
@@ -266,51 +262,6 @@ export const FootballTrader = () => {
     return true;
   };
 
-  // NEW: Separate function to fetch goal time data
-  const fetchFastStartData = async () => {
-    setIsFastStartLoading(true);
-    try {
-      // Uses the generic key content generator with a specific prompt
-      // Note: Ideally we'd have a specific API function, but this works by reusing the robust one
-      const fastStartPrompt = `
-      **TASK: Find Goal Timing Statistics for ${profile.teamA} and ${profile.teamB}.**
-
-      You must find:
-      1. **Average Minute of First Goal SCORED** for both teams this season.
-      2. **Average Minute of First Goal CONCEDED** for both teams this season.
-      3. **Percentage of goals scored in the first 15 minutes** for both teams.
-
-      **CRITICAL OUTPUT FORMAT:**
-      You MUST return a markdown list exactly like this:
-      * **${profile.teamA} (Avg Scored Time):** [e.g. 34th min]
-      * **${profile.teamA} (Avg Conceded Time):** [e.g. 22nd min]
-      * **${profile.teamB} (Avg Scored Time):** [e.g. 45th min]
-      * **${profile.teamB} (Avg Conceded Time):** [e.g. 60th min]
-      * **Fast Start Verdict:** [e.g. "HIGH PROBABILITY" or "LOW PROBABILITY" based on the times found].
-
-      If exact "average minute" is not found, look for "most common scoring period" or "first half goal percentage".
-      `;
-
-      // We pass an empty string for analysis text as we want it to rely on SEARCH (via tools) mostly
-      // But we need to ensure the API function supports search.
-      // Actually, generateTeamNews is better for this as it enforces search.
-
-      const result = await api.generateTeamNews(
-          profile.teamA,
-          profile.teamB,
-          fastStartPrompt.replace("{TODAY}", new Date().toDateString()), // Hack to use the prompt format
-          profile.apiKey
-      );
-
-      setFastStartContext(result);
-
-    } catch (e) {
-      console.error("Fast start fetch failed", e);
-    } finally {
-      setIsFastStartLoading(false);
-    }
-  };
-
   const handleGenerateProfile = async () => {
     setGeneralError(null);
     if (!validateInputs()) {
@@ -320,29 +271,18 @@ export const FootballTrader = () => {
     setIsGenerating(true);
     profile.resetProfile();
     setTeamNews({ text: "", sources: [] });
-    setFastStartContext({ text: "", sources: [] }); // Reset
+    setFastStartContext({ text: "", sources: [] });
     setIsInputsOpen(false);
 
     try {
       setLoadingStage("searching");
 
-      // 1. Start Team News Search
       const newsPromise = api.generateTeamNews(
         profile.teamA,
         profile.teamB,
         TEAM_NEWS_SYSTEM_PROMPT,
         profile.apiKey,
       );
-
-      // 2. NEW: Start Fast Start Data Search (Parallel)
-      // We don't await this immediately to let the main profile start sooner?
-      // No, let's do it sequential or parallel. Parallel is better.
-      // However, we need to inject the result into the prompt?
-      // The user asked to "supplement" the data. If we want the AI to use it in the MAIN analysis, we must await it.
-      // If it's just for the visual card, we can do it later.
-      // Let's do it later/on-demand or parallel for the Visuals tab to avoid blocking the main report.
-      // BUT, if we want the AI to *know* about it, we should await.
-      // Let's await it to make the analysis smarter.
 
       const fastStartPrompt = `
       **TASK: Find Goal Timing Statistics for ${profile.teamA} and ${profile.teamB}.**
@@ -447,7 +387,6 @@ export const FootballTrader = () => {
           * Most Common Scoreline: ${awayExt.mostCommonScore}
       `;
 
-      // UPDATED: Include RAW Half Data blocks here too, as a fallback
       const statsQuery = `
       Analyze the upcoming match: **${profile.teamA || "Home Team"} vs ${profile.teamB || "Away Team"}**.
 
@@ -499,7 +438,6 @@ export const FootballTrader = () => {
       const msg = error instanceof Error ? error.message : String(error);
       setGeneralError(msg);
       console.error(error);
-      // Re-open inputs if there was an error so user can fix it
       setIsInputsOpen(true);
       toast({
         title: "Generation Failed",
@@ -575,7 +513,6 @@ export const FootballTrader = () => {
                 Football Trader Profile Tool
             </h1>
           </div>
-          {/* Daily Plan Badge */}
           <button
              onClick={() => profile.setActiveTab("dailyPlan")}
              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-full text-xs font-bold text-white transition-colors"
@@ -630,7 +567,6 @@ export const FootballTrader = () => {
           </div>
 
           <CollapsibleContent className="p-5 space-y-4 animate-in slide-in-from-top-2 duration-200">
-            {/* ... (Inputs Section remains the same) ... */}
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -798,13 +734,11 @@ export const FootballTrader = () => {
 
           {!isGenerating && !api.profileError && profile.profile.text && (
             <div>
-               {/* COMBINED ACTIVE TRADING OPPORTUNITIES CARD */}
                <div className="mb-6 p-4 bg-indigo-900/20 border border-indigo-500/30 rounded-lg">
                    <h3 className="text-sm font-bold text-indigo-300 uppercase tracking-wider mb-3 flex items-center gap-2">
                        <TrendingUp className="h-4 w-4" /> Active Trading Opportunities
                    </h3>
 
-                   {/* Check if there are any strategies or angles, otherwise show empty state */}
                    {matchedStrategies.length === 0 && aiTradingAngles.length === 0 && (
                        <div className="text-center p-4 text-gray-400 text-xs italic mb-4 border border-dashed border-gray-700 rounded">
                            No AI trading opportunities detected automatically. Add your own below.
@@ -812,7 +746,6 @@ export const FootballTrader = () => {
                    )}
 
                    <div className="space-y-3 mb-4">
-                       {/* Custom Strategy Matches */}
                        {matchedStrategies.map((strat, idx) => (
                            <div key={`strat-${idx}`} className="flex justify-between items-start bg-gray-900/50 p-3 rounded border-l-4 border-l-green-500 border-y border-r border-indigo-500/20">
                                <div>
@@ -840,7 +773,6 @@ export const FootballTrader = () => {
                            </div>
                        ))}
 
-                       {/* AI Generated Angles */}
                        {aiTradingAngles.map((angle, idx) => (
                            <div key={`angle-${angle.id || idx}`} className="flex justify-between items-start bg-gray-900/50 p-3 rounded border-l-4 border-l-blue-500 border-y border-r border-indigo-500/20">
                                <div>
@@ -869,7 +801,6 @@ export const FootballTrader = () => {
                        ))}
                    </div>
 
-                   {/* NEW: MANUAL STRATEGY INPUT */}
                    <div className="mt-4 border-t border-indigo-500/30 pt-4">
                       <h4 className="text-xs font-bold text-indigo-300 uppercase tracking-wider mb-3 flex items-center gap-2">
                           <PenTool className="h-3 w-3" /> Add Custom Strategy
@@ -923,6 +854,11 @@ export const FootballTrader = () => {
                   onClick={() => profile.setActiveTab("report")}
                 />
                 <TabButton
+                  label="Strategy Confidence"
+                  isActive={profile.activeTab === "benchmarks"} // New Tab
+                  onClick={() => profile.setActiveTab("benchmarks")}
+                />
+                <TabButton
                   label="Team News"
                   isActive={profile.activeTab === "news"}
                   onClick={() => profile.setActiveTab("news")}
@@ -949,7 +885,7 @@ export const FootballTrader = () => {
                 />
                  <TabButton
                   label="Daily Plan"
-                  isActive={profile.activeTab === "dailyPlan"} // NEW TAB
+                  isActive={profile.activeTab === "dailyPlan"}
                   onClick={() => profile.setActiveTab("dailyPlan")}
                 />
                 <TabButton
@@ -968,8 +904,22 @@ export const FootballTrader = () => {
                   />
                 )}
 
-                {/* ... (Existing Tabs: News, Charts, Visualisations, Analyst, Learnings remain exactly the same) ... */}
-                {/* Only showing the new Tab integration */}
+                {profile.activeTab === "benchmarks" && (
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3 mb-4 p-3 bg-blue-900/20 border border-blue-700/30 rounded-lg">
+                      <BookOpen className="h-5 w-5 text-blue-400" />
+                      <div>
+                        <h3 className="font-bold text-blue-200 text-sm">Strategy Confidence Benchmarks</h3>
+                        <p className="text-xs text-blue-300/80">Reference guide for assessing trade confidence based on statistical thresholds.</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {STRATEGY_BENCHMARKS.map((strategy) => (
+                        <StrategyBenchmarkCard key={strategy.id} strategy={strategy} />
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {profile.activeTab === "dailyPlan" && (
                    <DailyTradingPlan
@@ -980,7 +930,6 @@ export const FootballTrader = () => {
                    />
                 )}
 
-                {/* Re-rendering other tabs to ensure file is complete and functional */}
                 {profile.activeTab === "news" && (
                   <div className="space-y-4">
                     <button
@@ -1069,8 +1018,6 @@ export const FootballTrader = () => {
                     }
                   >
                     <div className="space-y-6">
-
-                      {/* NEW: Tale of the Tape Card */}
                       <TaleOfTheTape
                         homeName={profile.teamA}
                         awayName={profile.teamB}
@@ -1090,7 +1037,6 @@ export const FootballTrader = () => {
                         ppgData={profile.analyticalFlagData?.ppg}
                       />
 
-                      {/* NEW: Fast Start Context */}
                       {fastStartContext.text && (
                         <div className="p-4 bg-amber-900/20 border border-amber-500/30 rounded-lg">
                             <h3 className="text-sm font-bold text-amber-300 uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -1104,7 +1050,6 @@ export const FootballTrader = () => {
                         </div>
                       )}
 
-                      {/* 1. Analytical Flags */}
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-3">
                           Key Analytical Flags
@@ -1112,23 +1057,19 @@ export const FootballTrader = () => {
                         <AnalyticalFlagDisplay />
                       </div>
 
-                      {/* 2. Goal Heatmap */}
                       <GoalHeatmap data={profile.fiveMinSegmentChartData} />
 
-                      {/* 3. NEW: Kill Zone Radar */}
                       <KillZoneRadar
                         data={profile.fiveMinSegmentChartData}
                         description="Overlaps indicate periods where one team scores while the other concedes. Large shapes mean high goal activity."
                       />
 
-                      {/* 4. Quadrant Chart */}
                       <LeagueStyleQuadrantChart
                         leagueTableData={profile.leagueTable}
                         homeTeamName={profile.teamA}
                         awayTeamName={profile.teamB}
                       />
 
-                       {/* 5. NEW: Form Pulse Charts (Side by Side) */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                               <h4 className="text-center font-semibold mb-2 text-white">{profile.teamA} Form Pulse</h4>
@@ -1152,7 +1093,6 @@ export const FootballTrader = () => {
                           </div>
                       </div>
 
-                       {/* 6. NEW: Opponent Scatter (Side by Side) */}
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <OpponentScatter
                                 matches={profile.homeExtendedStats.matches}
@@ -1170,7 +1110,6 @@ export const FootballTrader = () => {
                           />
                       </div>
 
-                      {/* 7. Volatility Cards */}
                       <div>
                         <h3 className="text-lg font-semibold text-white mb-3">
                           Volatility & Goal Ranges
